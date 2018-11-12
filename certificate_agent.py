@@ -78,6 +78,8 @@ def main():
             grade = xqueue_body.get('grade', None)
             issued_date = xqueue_body.get('issued_date', None)
             designation = xqueue_body.get('designation', None)
+            score = xqueue_body.get('score', 0)
+            pdf_info = xqueue_body.get('pdf_info', None)
             if last_course != course_id:
                 cert = CertificateGen(
                     course_id,
@@ -86,6 +88,8 @@ def main():
                     aws_key=args.aws_key,
                     long_course=course_name.encode('utf-8'),
                     issued_date=issued_date,
+                    score=score,
+                    pdf_info=pdf_info
                 )
                 last_course = course_id
             if action in ['remove', 'regen']:
