@@ -651,7 +651,10 @@ class CertificateGen(object):
             # we use this configuration
 
             font = self.pdf_info.get('font')
-            style = ParagraphStyle(name=font.lower(), leading=10, fontName=font)
+            if font == 'Arial':
+                style = styleArial
+            else:
+                style = ParagraphStyle(name=font.lower(), leading=10, fontName=font)
             style.alignment = TA_CENTER
             for sentence, info in self.pdf_info.items():
                 if sentence == 'font':
@@ -666,6 +669,13 @@ class CertificateGen(object):
                     paragraph_string = sentence.format(grade=self.score)
                 else:
                     paragraph_string = sentence
+                try:
+                    if info[2][5] == 'uppercase':
+                        style.textTransform = 'uppercase'
+                    if info[2][5] == 'lowercase':
+                        style.textTransform = 'lowercase'
+                except IndexError:
+                    style.textTransform = None
                 style.fontSize = info[2][0]
                 style.textColor = colors.Color(*info[2][1])
                 italic = info[2][3]
