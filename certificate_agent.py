@@ -89,6 +89,7 @@ def main():
                     aws_key=args.aws_key,
                     long_course=course_name.encode('utf-8'),
                     issued_date=issued_date,
+                    json_date=json_date,
                     score=score,
                     pdf_info=pdf_info
                 )
