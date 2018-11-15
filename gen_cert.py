@@ -185,7 +185,7 @@ class CertificateGen(object):
     """Manages the pdf, signatures, and S3 bucket for course certificates."""
 
     def __init__(self, course_id, template_pdf=None, aws_id=None, aws_key=None, dir_prefix=None,
-                 long_org=None, long_course=None, issued_date=None, score=None, pdf_info=None):
+                 long_org=None, long_course=None, issued_date=None, json_date=None, score=None, pdf_info=None):
         """Load a pdf template and initialize
 
         Multiple certificates can be generated and uploaded for a single course.
@@ -230,6 +230,7 @@ class CertificateGen(object):
             self.score = score
             self.long_course = long_course or cert_data.get('LONG_COURSE', '').encode('utf-8')
             self.issued_date = issued_date or cert_data.get('ISSUED_DATE', '').encode('utf-8') or 'ROLLING'
+            self.json_date = json_date
             self.interstitial_texts = collections.defaultdict(interstitial_factory())
             self.interstitial_texts.update(cert_data.get('interstitial', {}))
             self.pdf_info = pdf_info
@@ -667,6 +668,10 @@ class CertificateGen(object):
                     paragraph_string = sentence.format(course_name=self.long_course.decode('utf-8'))
                 elif '{grade}' in sentence:
                     paragraph_string = sentence.format(grade=self.score)
+                elif '{year}' in sentence and '{month}' in sentence and '{day}' in sentence:
+                    paragraph_string = sentence.format(year=self.json_date['year'],
+                                                       month=self.json_date['month'],
+                                                       day=self.json_date['day'])
                 else:
                     paragraph_string = sentence
                 try:

@@ -77,6 +77,7 @@ def main():
             template_pdf = xqueue_body.get('template_pdf', None)
             grade = xqueue_body.get('grade', None)
             issued_date = xqueue_body.get('issued_date', None)
+            json_date = xqueue_body.get('json_date', None)
             designation = xqueue_body.get('designation', None)
             score = xqueue_body.get('score', 0)
             pdf_info = xqueue_body.get('pdf_info', None)
