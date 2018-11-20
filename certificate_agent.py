@@ -91,8 +91,7 @@ def main():
                     issued_date=issued_date,
                     json_date=json_date,
                     score=score,
-                    pdf_info=pdf_info,
-                    username=username
+                    pdf_info=pdf_info
                 )
                 last_course = course_id
             if action in ['remove', 'regen']:
