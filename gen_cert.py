@@ -723,7 +723,7 @@ class CertificateGen(object):
         outputStream = file(filename, "wb")
         output.write(outputStream)
         outputStream.close()
-
+        print('before verification')
         self._generate_verification_page(
             student_name,
             filename,
@@ -731,7 +731,7 @@ class CertificateGen(object):
             verify_uuid,
             download_url
         )
-
+        print('after verification')
         return (download_uuid, verify_uuid, download_url)
 
     def _generate_v2_certificate(
