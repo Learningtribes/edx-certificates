@@ -663,7 +663,9 @@ class CertificateGen(object):
                 if sentence == 'font':
                     continue
                 if '{name}' in sentence:
+                    print("before name: ", student_name)
                     paragraph_string = sentence.format(name=student_name)
+                    print('after name')
                 elif '{issued_date}' in sentence:
                     paragraph_string = sentence.format(issued_date=self.issued_date)
                 elif '{course_name}' in sentence:
@@ -723,7 +725,7 @@ class CertificateGen(object):
         outputStream = file(filename, "wb")
         output.write(outputStream)
         outputStream.close()
-        print('before verification')
+
         self._generate_verification_page(
             student_name,
             filename,
@@ -731,7 +733,7 @@ class CertificateGen(object):
             verify_uuid,
             download_url
         )
-        print('after verification')
+
         return (download_uuid, verify_uuid, download_url)
 
     def _generate_v2_certificate(
