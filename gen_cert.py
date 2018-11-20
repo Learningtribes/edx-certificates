@@ -664,7 +664,7 @@ class CertificateGen(object):
                     continue
                 if '{name}' in sentence:
                     print("before name: ", student_name)
-                    paragraph_string = sentence.format(name=student_name)
+                    paragraph_string = sentence.format(name=student_name.decode('utf-8'))
                     print('after name')
                 elif '{issued_date}' in sentence:
                     paragraph_string = sentence.format(issued_date=self.issued_date)
