@@ -91,7 +91,7 @@ def main():
                     issued_date=issued_date,
                     json_date=json_date,
                     score=score,
-                    pdf_info=pdf_info
+                    pdf_info=pdf_info,
                 )
                 last_course = course_id
             if action in ['remove', 'regen']:
@@ -119,7 +119,7 @@ def main():
             )
             (download_uuid,
              verify_uuid,
-             download_url) = cert.create_and_upload(name.encode('utf-8'), grade=grade, designation=designation)
+             download_url) = cert.create_and_upload(username, grade=grade, designation=designation)
 
         except Exception as e:
             # global exception handler, if anything goes wrong
