@@ -240,6 +240,7 @@ class CertificateGen(object):
 
         # if COURSE or ORG is set in the configuration attempt to parse.
         # This supports both new and old style course keys.
+        self.course_id = course_id
         course_key = CourseKey.from_string(course_id)
         self.course = cert_data.get('COURSE', course_key.course)
         self.org = cert_data.get('ORG', course_key.org)
@@ -309,7 +310,7 @@ class CertificateGen(object):
 
         certificates_path = os.path.join(self.dir_prefix, S3_CERT_PATH)
         verify_path = os.path.join(self.dir_prefix, S3_VERIFY_PATH)
-        filename = "{0}_{1}_Certificate.pdf".format(name, self.long_course)
+        filename = "{0}_{1}_Certificate.pdf".format(name, self.course_id)
 
         (download_uuid, verify_uuid, download_url) = self._generate_certificate(student_name=name,
                                                                                 download_dir=certificates_path,
