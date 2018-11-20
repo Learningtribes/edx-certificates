@@ -663,7 +663,7 @@ class CertificateGen(object):
                 if sentence == 'font':
                     continue
                 if '{name}' in sentence:
-                    paragraph_string = unicode(sentence).format(name=student_name)
+                    paragraph_string = sentence.format(name=student_name)
                 elif '{issued_date}' in sentence:
                     paragraph_string = sentence.format(issued_date=self.issued_date)
                 elif '{course_name}' in sentence:

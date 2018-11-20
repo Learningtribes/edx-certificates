@@ -120,7 +120,7 @@ def main():
             )
             (download_uuid,
              verify_uuid,
-             download_url) = cert.create_and_upload(name, grade=grade, designation=designation)
+             download_url) = cert.create_and_upload(name.encode('utf-8'), grade=grade, designation=designation)
 
         except Exception as e:
             # global exception handler, if anything goes wrong
