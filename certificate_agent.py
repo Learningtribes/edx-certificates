@@ -118,6 +118,7 @@ def main():
                     grade=grade,
                 )
             )
+            print('test name: ', name)
             (download_uuid,
              verify_uuid,
              download_url) = cert.create_and_upload(name.encode('utf-8'), grade=grade, designation=designation)
