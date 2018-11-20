@@ -184,8 +184,8 @@ def autoscale_text(page, string, max_fontsize, max_leading, max_height, max_widt
 class CertificateGen(object):
     """Manages the pdf, signatures, and S3 bucket for course certificates."""
 
-    def __init__(self, course_id, template_pdf=None, aws_id=None, aws_key=None, dir_prefix=None,
-                 long_org=None, long_course=None, issued_date=None, json_date=None, score=None, pdf_info=None):
+    def __init__(self, course_id, template_pdf=None, aws_id=None, aws_key=None, dir_prefix=None, long_org=None,
+                 long_course=None, issued_date=None, json_date=None, score=None, pdf_info=None, username=None):
         """Load a pdf template and initialize
 
         Multiple certificates can be generated and uploaded for a single course.
@@ -234,6 +234,7 @@ class CertificateGen(object):
             self.interstitial_texts = collections.defaultdict(interstitial_factory())
             self.interstitial_texts.update(cert_data.get('interstitial', {}))
             self.pdf_info = pdf_info
+            self.username = username
         except KeyError:
             log.critical("Unable to lookup long names for course {0}".format(course_id))
             raise
@@ -310,7 +311,7 @@ class CertificateGen(object):
 
         certificates_path = os.path.join(self.dir_prefix, S3_CERT_PATH)
         verify_path = os.path.join(self.dir_prefix, S3_VERIFY_PATH)
-        filename = "{0}_{1}_Certificate.pdf".format(name, self.course_id)
+        filename = "{0}_{1}_Certificate.pdf".format(self.username, self.course_id)
 
         (download_uuid, verify_uuid, download_url) = self._generate_certificate(student_name=name,
                                                                                 download_dir=certificates_path,
