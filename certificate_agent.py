@@ -81,6 +81,7 @@ def main():
             designation = xqueue_body.get('designation', None)
             score = xqueue_body.get('score', 0)
             pdf_info = xqueue_body.get('pdf_info', None)
+            print("xqueue: ", xqueue_body)
             if last_course != course_id:
                 cert = CertificateGen(
                     course_id,
