@@ -259,7 +259,7 @@ class CertificateGen(object):
         template_prefix = '{0}/v{1}-cert-templates'.format(TEMPLATE_DIR, self.template_version)
         template_pdf_filename = "{0}/certificate-template-edX-DemoX.pdf".format(template_prefix)
         if template_pdf and pdf_info:
-            template_pdf_filename = "{0}/{1}".format(template_prefix, template_pdf)
+            template_pdf_filename = "{0}/{1}".format(pdf_info.get("template_dir"), template_pdf)
             if 'verified' in template_pdf:
                 self.template_type = 'verified'
         try:
