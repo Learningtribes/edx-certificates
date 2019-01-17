@@ -268,6 +268,7 @@ class CertificateGen(object):
             log.critical("I/O error ({0}): {1} opening {2}".format(e.errno, e.strerror, template_pdf_filename))
             raise
 
+        print("template_dir: ", template_pdf_filename)
         self.cert_label_singular = cert_data.get('CERTS_ARE_CALLED', CERTS_ARE_CALLED)
         self.cert_label_plural = cert_data.get('CERTS_ARE_CALLED_PLURAL', CERTS_ARE_CALLED_PLURAL)
         self.course_association_text = cert_data.get('COURSE_ASSOCIATION_TEXT', 'a course of study')
