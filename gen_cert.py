@@ -660,6 +660,7 @@ class CertificateGen(object):
                 style = ParagraphStyle(name=font.lower(), leading=10, fontName=font)
             style.alignment = TA_CENTER
             for sentence, info in self.pdf_info.items():
+                log.info(sentence, info)
                 log.info("test A")
                 if sentence == 'font' or sentence == "template_dir":
                     continue
@@ -677,6 +678,7 @@ class CertificateGen(object):
                                                        day=self.json_date['day'])
                 else:
                     paragraph_string = sentence
+                log.info("test C")
                 try:
                     if info[2][5] == 'uppercase':
                         style.textTransform = 'uppercase'
