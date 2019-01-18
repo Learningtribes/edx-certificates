@@ -313,14 +313,14 @@ class CertificateGen(object):
         certificates_path = os.path.join(self.dir_prefix, S3_CERT_PATH)
         verify_path = os.path.join(self.dir_prefix, S3_VERIFY_PATH)
         filename = "{0}_{1}_Certificate.pdf".format(username, self.course_id)
-
+        print("test 1")
         (download_uuid, verify_uuid, download_url) = self._generate_certificate(student_name=name,
                                                                                 download_dir=certificates_path,
                                                                                 verify_dir=verify_path,
                                                                                 grade=grade,
                                                                                 filename=filename,
                                                                                 designation=designation,)
-
+        print("test 2")
         # upload generated certificate and verification files to S3,
         # or copy them to the web root. Or both.
         my_certs_path = os.path.join(certificates_path, download_uuid)
