@@ -654,7 +654,7 @@ class CertificateGen(object):
 
             paragraph.wrapOn(c, WIDTH * mm, HEIGHT * mm)
             paragraph.drawOn(c, 0 * mm, 28 * mm)
-
+            log.info("test 6")
         else:
             # if we have customize the pdf template conf is django admin,
             # we use this configuration
@@ -666,7 +666,7 @@ class CertificateGen(object):
                 style = ParagraphStyle(name=font.lower(), leading=10, fontName=font)
             style.alignment = TA_CENTER
             for sentence, info in self.pdf_info.items():
-                if sentence == 'font':
+                if sentence == 'font' or sentence == "template_dir":
                     continue
                 if '{name}' in sentence:
                     paragraph_string = sentence.format(name=student_name.decode('utf-8'))
