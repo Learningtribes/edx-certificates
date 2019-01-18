@@ -652,7 +652,7 @@ class CertificateGen(object):
         else:
             # if we have customize the pdf template conf is django admin,
             # we use this configuration
-            log.info("test 1")
+
             font = self.pdf_info.get('font')
             if font == 'Arial':
                 style = styleArial
@@ -660,8 +660,6 @@ class CertificateGen(object):
                 style = ParagraphStyle(name=font.lower(), leading=10, fontName=font)
             style.alignment = TA_CENTER
             for sentence, info in self.pdf_info.items():
-                log.info(sentence, info)
-                log.info("test A")
                 if sentence == 'font' or sentence == "template_dir":
                     continue
                 if '{name}' in sentence:
@@ -678,7 +676,7 @@ class CertificateGen(object):
                                                        day=self.json_date['day'])
                 else:
                     paragraph_string = sentence
-                log.info("test C")
+
                 try:
                     if info[2][5] == 'uppercase':
                         style.textTransform = 'uppercase'
@@ -686,14 +684,12 @@ class CertificateGen(object):
                         style.textTransform = 'lowercase'
                 except IndexError:
                     style.textTransform = None
-                log.info("test D")
+
                 style.fontSize = info[2][0]
-                print("color: ", info[2][1])
                 style.textColor = colors.Color(*info[2][1])
-                log.info("test G")
                 italic = info[2][3]
                 bold = info[2][2]
-                log.info("test E")
+
                 if info[2][4] == 'center':
                     style.alignment = TA_CENTER
                 elif info[2][4] == 'left':
@@ -704,19 +700,18 @@ class CertificateGen(object):
                     paragraph_string = '<i>' + paragraph_string + '</i>'
                 if bold:
                     paragraph_string = '<b>' + paragraph_string + '</b>'
-                log.info("test F")
+
                 paragraph = Paragraph(paragraph_string, style)
                 paragraph.wrapOn(c, info[0][0]*mm, info[0][1]*mm)
                 paragraph.drawOn(c, info[1][0]*mm, info[1][1]*mm)
-                log.info("test 2")
-            log.info("test B")
+
         c.showPage()
         c.save()
-        log.info("test 4")
+
         # Merge the overlay with the template, then write it to file
         output = PdfFileWriter()
         overlay = PdfFileReader(overlay_pdf_buffer)
-        log.info("test 5")
+
         # We need a page to overlay on.
         # So that we don't have to open the template
         # several times, we open a blank pdf several times instead
@@ -724,15 +719,14 @@ class CertificateGen(object):
         final_certificate = copy.copy(BLANK_PDFS['landscape-A4']).getPage(0)
         final_certificate.mergePage(self.template_pdf.getPage(0))
         final_certificate.mergePage(overlay.getPage(0))
-        log.info("test 6")
+
         output.addPage(final_certificate)
 
         self._ensure_dir(filename)
-        log.info("test 7")
         outputStream = file(filename, "wb")
         output.write(outputStream)
         outputStream.close()
-        log.info("test 3")
+
         self._generate_verification_page(
             student_name,
             filename,
