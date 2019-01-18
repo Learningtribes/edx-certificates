@@ -255,17 +255,13 @@ class CertificateGen(object):
         # If TEMPLATEFILE is set in cert-data.yml, this value has top priority.
         # Else if a value is passed in to the constructor (eg, from xqueue), it is used,
         # Else, the filename is calculated from the version and course_id.
-        log.info("test B")
         template_pdf = cert_data.get('TEMPLATEFILE', template_pdf)
         template_prefix = '{0}/v{1}-cert-templates'.format(TEMPLATE_DIR, self.template_version)
         template_pdf_filename = "{0}/certificate-template-edX-DemoX.pdf".format(template_prefix)
-        log.info("test C")
         if template_pdf and pdf_info:
-            log.info("template_dir: ", pdf_info.get("template_dir"))
             template_pdf_filename = "{0}/{1}".format(pdf_info.get("template_dir"), template_pdf)
             if 'verified' in template_pdf:
                 self.template_type = 'verified'
-        log.info("test D")
         try:
             self.template_pdf = PdfFileReader(file(template_pdf_filename, "rb"))
         except IOError as e:
@@ -275,7 +271,6 @@ class CertificateGen(object):
         self.cert_label_singular = cert_data.get('CERTS_ARE_CALLED', CERTS_ARE_CALLED)
         self.cert_label_plural = cert_data.get('CERTS_ARE_CALLED_PLURAL', CERTS_ARE_CALLED_PLURAL)
         self.course_association_text = cert_data.get('COURSE_ASSOCIATION_TEXT', 'a course of study')
-        log.info("test end")
 
     def delete_certificate(self, delete_download_uuid, delete_verify_uuid):
         # TODO remove/archive an existing certificate
@@ -313,18 +308,18 @@ class CertificateGen(object):
         download_url = None
         s3_conn = None
         bucket = None
-        log.info("test beginning")
+
         certificates_path = os.path.join(self.dir_prefix, S3_CERT_PATH)
         verify_path = os.path.join(self.dir_prefix, S3_VERIFY_PATH)
         filename = "{0}_{1}_Certificate.pdf".format(username, self.course_id)
-        log.info("test 1")
+
         (download_uuid, verify_uuid, download_url) = self._generate_certificate(student_name=name,
                                                                                 download_dir=certificates_path,
                                                                                 verify_dir=verify_path,
                                                                                 grade=grade,
                                                                                 filename=filename,
                                                                                 designation=designation,)
-        log.info("test 2")
+
         # upload generated certificate and verification files to S3,
         # or copy them to the web root. Or both.
         my_certs_path = os.path.join(certificates_path, download_uuid)
@@ -388,7 +383,6 @@ class CertificateGen(object):
             '3_dynamic': self._generate_v3_dynamic_certificate,
             'stanford_cme': self._generate_stanford_cme_certificate,
         }
-        log.info("test 3")
         # TODO: we should be taking args, kwargs, and passing those on to our callees
         return versionmap[self.template_version](
             student_name,
@@ -409,7 +403,7 @@ class CertificateGen(object):
         designation=None,
     ):
         # A4 page size is 297mm x 210mm
-        log.info("test 4")
+
         verify_uuid = uuid.uuid4().hex
         download_uuid = uuid.uuid4().hex
         download_url = "{base_url}/{cert}/{uuid}/{file}".format(
@@ -450,7 +444,7 @@ class CertificateGen(object):
         styleArial = ParagraphStyle(name="arial", leading=10, fontName='Arial Unicode')
         styleOpenSans = ParagraphStyle(name="opensans-regular", leading=10, fontName='OpenSans-Regular')
         styleOpenSansLight = ParagraphStyle(name="opensans-light", leading=10, fontName='OpenSans-Light')
-        log.info("test 5")
+
         if not self.pdf_info:
             # if there is no pdf template config in django admin,
             # then we use the default configuration
@@ -654,7 +648,7 @@ class CertificateGen(object):
 
             paragraph.wrapOn(c, WIDTH * mm, HEIGHT * mm)
             paragraph.drawOn(c, 0 * mm, 28 * mm)
-            log.info("test 6")
+
         else:
             # if we have customize the pdf template conf is django admin,
             # we use this configuration
