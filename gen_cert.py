@@ -259,7 +259,7 @@ class CertificateGen(object):
         template_prefix = '{0}/v{1}-cert-templates'.format(TEMPLATE_DIR, self.template_version)
         template_pdf_filename = "{0}/certificate-template-edX-DemoX.pdf".format(template_prefix)
         if template_pdf and pdf_info:
-            template_pdf_filename = "{0}/{1}".format(template_prefix, template_pdf)
+            template_pdf_filename = "{0}/{1}".format(pdf_info.get("template_dir"), template_pdf)
             if 'verified' in template_pdf:
                 self.template_type = 'verified'
         try:
@@ -660,7 +660,7 @@ class CertificateGen(object):
                 style = ParagraphStyle(name=font.lower(), leading=10, fontName=font)
             style.alignment = TA_CENTER
             for sentence, info in self.pdf_info.items():
-                if sentence == 'font':
+                if sentence == 'font' or sentence == "template_dir":
                     continue
                 if '{name}' in sentence:
                     paragraph_string = sentence.format(name=student_name.decode('utf-8'))
@@ -676,6 +676,7 @@ class CertificateGen(object):
                                                        day=self.json_date['day'])
                 else:
                     paragraph_string = sentence
+
                 try:
                     if info[2][5] == 'uppercase':
                         style.textTransform = 'uppercase'
@@ -683,10 +684,12 @@ class CertificateGen(object):
                         style.textTransform = 'lowercase'
                 except IndexError:
                     style.textTransform = None
+
                 style.fontSize = info[2][0]
                 style.textColor = colors.Color(*info[2][1])
                 italic = info[2][3]
                 bold = info[2][2]
+
                 if info[2][4] == 'center':
                     style.alignment = TA_CENTER
                 elif info[2][4] == 'left':
@@ -697,6 +700,7 @@ class CertificateGen(object):
                     paragraph_string = '<i>' + paragraph_string + '</i>'
                 if bold:
                     paragraph_string = '<b>' + paragraph_string + '</b>'
+
                 paragraph = Paragraph(paragraph_string, style)
                 paragraph.wrapOn(c, info[0][0]*mm, info[0][1]*mm)
                 paragraph.drawOn(c, info[1][0]*mm, info[1][1]*mm)
@@ -719,7 +723,6 @@ class CertificateGen(object):
         output.addPage(final_certificate)
 
         self._ensure_dir(filename)
-
         outputStream = file(filename, "wb")
         output.write(outputStream)
         outputStream.close()
