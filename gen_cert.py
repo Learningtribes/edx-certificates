@@ -688,7 +688,9 @@ class CertificateGen(object):
                     style.textTransform = None
                 log.info("test D")
                 style.fontSize = info[2][0]
+                print("color: ", info[2][1])
                 style.textColor = colors.Color(*info[2][1])
+                log.info("test G")
                 italic = info[2][3]
                 bold = info[2][2]
                 log.info("test E")
