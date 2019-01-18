@@ -652,7 +652,7 @@ class CertificateGen(object):
         else:
             # if we have customize the pdf template conf is django admin,
             # we use this configuration
-
+            log.info("test 1")
             font = self.pdf_info.get('font')
             if font == 'Arial':
                 style = styleArial
@@ -700,7 +700,7 @@ class CertificateGen(object):
                 paragraph = Paragraph(paragraph_string, style)
                 paragraph.wrapOn(c, info[0][0]*mm, info[0][1]*mm)
                 paragraph.drawOn(c, info[1][0]*mm, info[1][1]*mm)
-
+                log.info("test 2")
         c.showPage()
         c.save()
 
@@ -723,7 +723,7 @@ class CertificateGen(object):
         outputStream = file(filename, "wb")
         output.write(outputStream)
         outputStream.close()
-
+        log.info("test 3")
         self._generate_verification_page(
             student_name,
             filename,
