@@ -388,6 +388,7 @@ class CertificateGen(object):
             '3_dynamic': self._generate_v3_dynamic_certificate,
             'stanford_cme': self._generate_stanford_cme_certificate,
         }
+        log.info("test 3")
         # TODO: we should be taking args, kwargs, and passing those on to our callees
         return versionmap[self.template_version](
             student_name,
@@ -408,7 +409,7 @@ class CertificateGen(object):
         designation=None,
     ):
         # A4 page size is 297mm x 210mm
-
+        log.info("test 4")
         verify_uuid = uuid.uuid4().hex
         download_uuid = uuid.uuid4().hex
         download_url = "{base_url}/{cert}/{uuid}/{file}".format(
@@ -449,7 +450,7 @@ class CertificateGen(object):
         styleArial = ParagraphStyle(name="arial", leading=10, fontName='Arial Unicode')
         styleOpenSans = ParagraphStyle(name="opensans-regular", leading=10, fontName='OpenSans-Regular')
         styleOpenSansLight = ParagraphStyle(name="opensans-light", leading=10, fontName='OpenSans-Light')
-
+        log.info("test 5")
         if not self.pdf_info:
             # if there is no pdf template config in django admin,
             # then we use the default configuration
