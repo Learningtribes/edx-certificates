@@ -686,10 +686,12 @@ class CertificateGen(object):
                         style.textTransform = 'lowercase'
                 except IndexError:
                     style.textTransform = None
+                log.info("test D")
                 style.fontSize = info[2][0]
                 style.textColor = colors.Color(*info[2][1])
                 italic = info[2][3]
                 bold = info[2][2]
+                log.info("test E")
                 if info[2][4] == 'center':
                     style.alignment = TA_CENTER
                 elif info[2][4] == 'left':
@@ -700,6 +702,7 @@ class CertificateGen(object):
                     paragraph_string = '<i>' + paragraph_string + '</i>'
                 if bold:
                     paragraph_string = '<b>' + paragraph_string + '</b>'
+                log.info("test F")
                 paragraph = Paragraph(paragraph_string, style)
                 paragraph.wrapOn(c, info[0][0]*mm, info[0][1]*mm)
                 paragraph.drawOn(c, info[1][0]*mm, info[1][1]*mm)
