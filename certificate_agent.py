@@ -81,16 +81,16 @@ def main():
             designation = xqueue_body.get('designation', None)
             score = xqueue_body.get('score', 0)
             pdf_info = xqueue_body.get('pdf_info', None)
-            if last_course != course_id:
+            if last_course != course_id or \
+                    cert.long_course != course_name.encode('utf-8') or \
+                    cert.pdf_info != pdf_info:
+                log.info("creating a new cert object")
                 cert = CertificateGen(
                     course_id,
                     template_pdf,
                     aws_id=args.aws_id,
                     aws_key=args.aws_key,
                     long_course=course_name.encode('utf-8'),
-                    issued_date=issued_date,
-                    json_date=json_date,
-                    score=score,
                     pdf_info=pdf_info
                 )
                 last_course = course_id
@@ -119,7 +119,13 @@ def main():
             )
             (download_uuid,
              verify_uuid,
-             download_url) = cert.create_and_upload(name.encode('utf-8'), username, grade=grade, designation=designation)
+             download_url) = cert.create_and_upload(name.encode('utf-8'),
+                                                    username,
+                                                    grade=grade,
+                                                    designation=designation,
+                                                    issued_date=issued_date,
+                                                    json_date=json_date,
+                                                    score=score)
 
         except Exception as e:
             # global exception handler, if anything goes wrong
