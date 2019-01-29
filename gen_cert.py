@@ -185,7 +185,7 @@ class CertificateGen(object):
     """Manages the pdf, signatures, and S3 bucket for course certificates."""
 
     def __init__(self, course_id, template_pdf=None, aws_id=None, aws_key=None, dir_prefix=None, long_org=None,
-                 long_course=None, issued_date=None, json_date=None, score=None, pdf_info=None):
+                 long_course=None, pdf_info=None):
         """Load a pdf template and initialize
 
         Multiple certificates can be generated and uploaded for a single course.
@@ -219,6 +219,9 @@ class CertificateGen(object):
 
         cert_data = settings.CERT_DATA.get(course_id, {})
         self.cert_data = cert_data
+        self.issued_date = None
+        self.json_date = None
+        self.score = 0
 
         def interstitial_factory():
             """ Generate default values for interstitial_texts defaultdict """
@@ -227,10 +230,7 @@ class CertificateGen(object):
         # lookup long names from the course_id
         try:
             self.long_org = long_org or cert_data.get('LONG_ORG', '').encode('utf-8') or settings.DEFAULT_ORG
-            self.score = score
             self.long_course = long_course or cert_data.get('LONG_COURSE', '').encode('utf-8')
-            self.issued_date = issued_date or cert_data.get('ISSUED_DATE', '').encode('utf-8') or 'ROLLING'
-            self.json_date = json_date
             self.interstitial_texts = collections.defaultdict(interstitial_factory())
             self.interstitial_texts.update(cert_data.get('interstitial', {}))
             self.pdf_info = pdf_info
@@ -286,6 +286,9 @@ class CertificateGen(object):
         cert_web_root=settings.CERT_WEB_ROOT,
         grade=None,
         designation=None,
+        issued_date="Rolling",
+        json_date=None,
+        score=0
     ):
         """
         name - Full name that will be on the certificate
@@ -308,6 +311,9 @@ class CertificateGen(object):
         download_url = None
         s3_conn = None
         bucket = None
+        self.score = score
+        self.issued_date = issued_date
+        self.json_date = json_date
 
         certificates_path = os.path.join(self.dir_prefix, S3_CERT_PATH)
         verify_path = os.path.join(self.dir_prefix, S3_VERIFY_PATH)
