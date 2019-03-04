@@ -90,7 +90,7 @@ if os.path.isfile(ENV_ROOT / "env.json"):
         ENV_TOKENS = json.load(env_file)
     TMP_GEN_DIR = ENV_TOKENS.get('TMP_GEN_DIR', '/tmp/certificates/')
     QUEUE_NAME = ENV_TOKENS.get('QUEUE_NAME', 'test-pull')
-    QUEUE_URL = ENV_TOKENS.get('QUEUE_URL', 'https://stage-xqueue.edx.org')
+    QUEUE_URL = os.environ['QUEUE_URL'] or ENV_TOKENS.get('QUEUE_URL', 'https://stage-xqueue.edx.org')
     QUEUE_POLL_FREQUENCY = ENV_TOKENS.get('QUEUE_POLL_FREQUENCY', QUEUE_POLL_FREQUENCY)
     CERT_GPG_DIR = ENV_TOKENS.get('CERT_GPG_DIR', CERT_GPG_DIR)
     CERT_KEY_ID = ENV_TOKENS.get('CERT_KEY_ID', CERT_KEY_ID)
