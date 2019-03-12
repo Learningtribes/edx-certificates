@@ -256,12 +256,14 @@ class CertificateGen(object):
         # Else if a value is passed in to the constructor (eg, from xqueue), it is used,
         # Else, the filename is calculated from the version and course_id.
         template_pdf = cert_data.get('TEMPLATEFILE', template_pdf)
-        template_prefix = '{0}/v{1}-cert-templates'.format(TEMPLATE_DIR, self.template_version)
-        template_pdf_filename = "{0}/certificate-template-edX-DemoX.pdf".format(template_prefix)
+        template_prefix = "/edx/app/edxapp/edx-platform/lms/static/certificates"
+        template_pdf_filename = "{0}/certificate-template.pdf".format(template_prefix)
         if template_pdf and pdf_info:
             template_pdf_filename = "{0}/{1}".format(pdf_info.get("template_dir"), template_pdf)
             if 'verified' in template_pdf:
                 self.template_type = 'verified'
+        log.info(pdf_info)
+        log.info("template_filename: {}".format(template_pdf_filename))
         try:
             self.template_pdf = PdfFileReader(file(template_pdf_filename, "rb"))
         except IOError as e:
