@@ -6,7 +6,7 @@ import os
 import time
 import settings
 from openedx_certificates.queue_xqueue import XQueuePullManager
-from gen_cert import CertificateGen
+from gen_cert import CertificateGen, CertificateExport
 
 logging.config.dictConfig(settings.LOGGING)
 log = logging.getLogger('certificates: ' + __name__)
@@ -70,124 +70,182 @@ def main():
             xqueue_body = json.loads(certdata['xqueue_body'])
             xqueue_header = json.loads(certdata['xqueue_header'])
             action = xqueue_body['action']
-            username = xqueue_body['username']
             course_id = xqueue_body['course_id']
-            course_name = xqueue_body['course_name']
-            name = xqueue_body['name']
-            template_pdf = xqueue_body.get('template_pdf', None)
-            grade = xqueue_body.get('grade', None)
-            issued_date = xqueue_body.get('issued_date', None)
-            json_date = xqueue_body.get('json_date', None)
-            designation = xqueue_body.get('designation', None)
-            score = xqueue_body.get('score', 0)
-            pdf_info = xqueue_body.get('pdf_info', None)
-            if last_course != course_id or \
-                    cert.long_course != course_name.encode('utf-8') or \
-                    cert.pdf_info != pdf_info:
-                log.info("creating a new cert object")
-                cert = CertificateGen(
-                    course_id,
-                    template_pdf,
-                    aws_id=args.aws_id,
-                    aws_key=args.aws_key,
-                    long_course=course_name.encode('utf-8'),
-                    pdf_info=pdf_info
-                )
-                last_course = course_id
-            if action in ['remove', 'regen']:
-                cert.delete_certificate(xqueue_body['delete_download_uuid'],
-                                        xqueue_body['delete_verify_uuid'])
-                if action in ['remove']:
-                    continue
-
         except (TypeError, ValueError, KeyError, IOError) as e:
             log.critical('Unable to parse queue submission ({0}) : {1}'.format(e, certdata))
             if settings.DEBUG:
                 raise
             else:
                 continue
+        if action == 'export':
+            try:
+                certs_path = xqueue_body['certs_path']
+                export = CertificateExport(course_id)
 
-        try:
-            log.info(
-                "Generating certificate for {username} ({name}), "
-                "in {course_id}, with grade {grade}".format(
-                    username=username.encode('utf-8'),
-                    name=name.encode('utf-8'),
-                    course_id=course_id.encode('utf-8'),
-                    grade=grade,
+            except (TypeError, ValueError, KeyError, IOError) as e:
+                log.critical('Unable to parse queue submission ({0}) : {1}'.format(e, certdata))
+                if settings.DEBUG:
+                    raise
+                else:
+                    continue
+
+            try:
+                log.info("Generating Certificates Export for {course}.  "
+                         "Certs_path {certs_path}".format(course=course_id, certs_path=certs_path))
+                download_url = export.create_and_upload(certs_path)
+
+            except Exception as e:
+                log.critical(
+                    'An error occurred during certificates export generation {reason}'.format(
+                        reason=e,
+                    )
                 )
-            )
-            (download_uuid,
-             verify_uuid,
-             download_url) = cert.create_and_upload(name.encode('utf-8'),
-                                                    username,
-                                                    grade=grade,
-                                                    designation=designation,
-                                                    issued_date=issued_date,
-                                                    json_date=json_date,
-                                                    score=score)
+                xqueue_reply = {
+                    'xqueue_header': json.dumps(xqueue_header),
+                    'xqueue_body': json.dumps({
+                        'error': 'There was an error processing the certificates export request: {error}'.format(
+                            error=e,
+                        ),
+                        'course_id': course_id,
+                    }),
+                }
+                manager.respond(xqueue_reply)
+                if settings.DEBUG:
+                    raise
+                else:
+                    continue
 
-        except Exception as e:
-            # global exception handler, if anything goes wrong
-            # during the generation of the pdf we will let the LMS
-            # know so it can be re-submitted, the LMS will update
-            # the state to error
-
-            # get as much info as possible about the exception
-            # for the post back to the LMS
-
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            error_reason = (
-                "({username} {course_id}) "
-                "{exception_type}: {exception}: "
-                "{file_name}:{line_number}".format(
-                    username=username,
-                    course_id=course_id,
-                    exception_type=exc_type,
-                    exception=e,
-                    file_name=fname,
-                    line_number=exc_tb.tb_lineno,
-                )
-            )
-
-            log.critical(
-                'An error occurred during certificate generation {reason}'.format(
-                    reason=error_reason,
-                )
-            )
-
+            # post result back to the LMS
             xqueue_reply = {
                 'xqueue_header': json.dumps(xqueue_header),
                 'xqueue_body': json.dumps({
-                    'error': 'There was an error processing the certificate request: {error}'.format(
-                        error=e,
-                    ),
-                    'username': username,
+                    'action': action,
                     'course_id': course_id,
-                    'error_reason': error_reason,
+                    'url': download_url,
                 }),
             }
+            log.info("Posting result to the LMS: {0}".format(xqueue_reply))
             manager.respond(xqueue_reply)
-            if settings.DEBUG:
-                raise
-            else:
-                continue
 
-        # post result back to the LMS
-        xqueue_reply = {
-            'xqueue_header': json.dumps(xqueue_header),
-            'xqueue_body': json.dumps({
-                'action': action,
-                'download_uuid': download_uuid,
-                'verify_uuid': verify_uuid,
-                'username': username,
-                'course_id': course_id,
-                'url': download_url,
-            }),
-        }
-        log.info("Posting result to the LMS: {0}".format(xqueue_reply))
-        manager.respond(xqueue_reply)
+        else:
+            try:
+                username = xqueue_body['username']
+                course_name = xqueue_body['course_name']
+                name = xqueue_body['name']
+                template_pdf = xqueue_body.get('template_pdf', None)
+                grade = xqueue_body.get('grade', None)
+                issued_date = xqueue_body.get('issued_date', None)
+                json_date = xqueue_body.get('json_date', None)
+                designation = xqueue_body.get('designation', None)
+                score = xqueue_body.get('score', 0)
+                pdf_info = xqueue_body.get('pdf_info', None)
+                if last_course != course_id or \
+                        cert.long_course != course_name.encode('utf-8') or \
+                        cert.pdf_info != pdf_info:
+                    log.info("creating a new cert object")
+                    cert = CertificateGen(
+                        course_id,
+                        template_pdf,
+                        aws_id=args.aws_id,
+                        aws_key=args.aws_key,
+                        long_course=course_name.encode('utf-8'),
+                        pdf_info=pdf_info
+                    )
+                    last_course = course_id
+                if action in ['remove', 'regen']:
+                    cert.delete_certificate(xqueue_body['delete_download_uuid'],
+                                            xqueue_body['delete_verify_uuid'])
+                    if action in ['remove']:
+                        continue
+
+            except (TypeError, ValueError, KeyError, IOError) as e:
+                log.critical('Unable to parse queue submission ({0}) : {1}'.format(e, certdata))
+                if settings.DEBUG:
+                    raise
+                else:
+                    continue
+
+            try:
+                log.info(
+                    "Generating certificate for {username} ({name}), "
+                    "in {course_id}, with grade {grade}".format(
+                        username=username.encode('utf-8'),
+                        name=name.encode('utf-8'),
+                        course_id=course_id.encode('utf-8'),
+                        grade=grade,
+                    )
+                )
+                (download_uuid,
+                 verify_uuid,
+                 download_url) = cert.create_and_upload(name.encode('utf-8'),
+                                                        username,
+                                                        grade=grade,
+                                                        designation=designation,
+                                                        issued_date=issued_date,
+                                                        json_date=json_date,
+                                                        score=score)
+
+            except Exception as e:
+                # global exception handler, if anything goes wrong
+                # during the generation of the pdf we will let the LMS
+                # know so it can be re-submitted, the LMS will update
+                # the state to error
+
+                # get as much info as possible about the exception
+                # for the post back to the LMS
+
+                exc_type, exc_obj, exc_tb = sys.exc_info()
+                fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+                error_reason = (
+                    "({username} {course_id}) "
+                    "{exception_type}: {exception}: "
+                    "{file_name}:{line_number}".format(
+                        username=username,
+                        course_id=course_id,
+                        exception_type=exc_type,
+                        exception=e,
+                        file_name=fname,
+                        line_number=exc_tb.tb_lineno,
+                    )
+                )
+
+                log.critical(
+                    'An error occurred during certificate generation {reason}'.format(
+                        reason=error_reason,
+                    )
+                )
+
+                xqueue_reply = {
+                    'xqueue_header': json.dumps(xqueue_header),
+                    'xqueue_body': json.dumps({
+                        'error': 'There was an error processing the certificate request: {error}'.format(
+                            error=e,
+                        ),
+                        'username': username,
+                        'course_id': course_id,
+                        'error_reason': error_reason,
+                    }),
+                }
+                manager.respond(xqueue_reply)
+                if settings.DEBUG:
+                    raise
+                else:
+                    continue
+
+            # post result back to the LMS
+            xqueue_reply = {
+                'xqueue_header': json.dumps(xqueue_header),
+                'xqueue_body': json.dumps({
+                    'action': action,
+                    'download_uuid': download_uuid,
+                    'verify_uuid': verify_uuid,
+                    'username': username,
+                    'course_id': course_id,
+                    'url': download_url,
+                }),
+            }
+            log.info("Posting result to the LMS: {0}".format(xqueue_reply))
+            manager.respond(xqueue_reply)
 
 
 if __name__ == '__main__':

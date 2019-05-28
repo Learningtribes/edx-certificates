@@ -58,7 +58,7 @@ CERT_FILENAME = 'Certificate.pdf'
 CERT_AWS_ID = None
 CERT_AWS_KEY = None
 # Update this with your bucket name
-CERT_BUCKET = 'verify-test.edx.org'
+CERT_BUCKET = ''
 CERT_WEB_ROOT = '/var/tmp'
 # when set to true this will copy the generated certificate
 # to the CERT_WEB_ROOT. This is not something you want to do
@@ -118,11 +118,11 @@ if os.path.isfile(ENV_ROOT / "env.json"):
     CERT_PRIVATE_DIR = ENV_TOKENS.get('CERT_PRIVATE_DIR', CERT_PRIVATE_DIR)
 
 # This is the base URL used for logging CERT uploads to s3
-CERT_URL = CERT_URL or 'http://{}.s3.amazonaws.com'.format(CERT_BUCKET)
+CERT_URL = 'http://{}.s3.amazonaws.com'.format(CERT_BUCKET) if CERT_BUCKET and S3_UPLOAD else CERT_URL
 # This is the base URL that will be displayed to the user in the dashboard
 # It's different than CERT_URL because because CERT_URL will not have a valid
 # SSL certificate. # FIXME: confirm whether this is true
-CERT_DOWNLOAD_URL = CERT_DOWNLOAD_URL or 'https://{}.s3.amazonaws.com'.format(CERT_BUCKET)
+CERT_DOWNLOAD_URL = 'https://{}.s3.amazonaws.com'.format(CERT_BUCKET) if CERT_BUCKET and S3_UPLOAD else CERT_DOWNLOAD_URL
 CERT_VERIFY_URL = CERT_VERIFY_URL or 'http://{}.s3.amazonaws.com'.format(CERT_BUCKET)
 
 DEFAULT_ORG = "Some Institution"

@@ -8,7 +8,9 @@ import os
 import re
 import shutil
 import StringIO
+import urllib
 import uuid
+import zipfile
 
 from reportlab.platypus import Paragraph
 from PyPDF2 import PdfFileWriter, PdfFileReader
@@ -416,7 +418,7 @@ class CertificateGen(object):
         download_uuid = uuid.uuid4().hex
         download_url = "{base_url}/{cert}/{uuid}/{file}".format(
             base_url=settings.CERT_DOWNLOAD_URL,
-            cert=S3_CERT_PATH, uuid=download_uuid, file=filename)
+            cert=S3_CERT_PATH, uuid=download_uuid, file=urllib.quote(filename))
         filename = os.path.join(download_dir, download_uuid, filename)
 
         # This file is overlaid on the template certificate
@@ -2064,3 +2066,70 @@ class CertificateGen(object):
             )
 
         return (download_uuid, verify_uuid, download_url)
+
+
+class CertificateExport(object):
+
+    def __init__(self, course_id):
+        self.course_id = course_id
+        self._ensure_dir(TMP_GEN_DIR)
+        dir_prefix = tempfile.mkdtemp(prefix=TMP_GEN_DIR)
+        self._ensure_dir(dir_prefix)
+        self.dir_prefix = dir_prefix
+
+    def create_and_upload(
+            self,
+            certs_path,
+            upload=settings.S3_UPLOAD,
+            cleanup=True,
+            copy_to_webroot=settings.COPY_TO_WEB_ROOT,
+            cert_web_root=settings.CERT_WEB_ROOT,
+    ):
+        time_now = datetime.datetime.now()
+        file_name = '{course}_{date}.zip'.format(course=self.course_id, date=time_now)
+        file_path = os.path.join(self.dir_prefix, S3_CERT_PATH, 'certs-zip')
+        file_name = os.path.join(file_path, file_name)
+        self._ensure_dir(file_name)
+        certs_base_dir = '/edx/var/certs/www-data/downloads'
+        zip_handler = zipfile.ZipFile(file_name, 'w', zipfile.ZIP_DEFLATED)
+        for f in certs_path:
+            zip_handler.write(os.path.join(certs_base_dir, f), f.rsplit('/')[-1])
+        zip_handler.close()
+
+        dest_path = os.path.relpath(file_name, start=self.dir_prefix)
+        download_url = "{base_url}/{file}".format(
+            base_url=settings.CERT_DOWNLOAD_URL,
+            file=urllib.quote(dest_path)
+        )
+        if upload:
+            s3_conn = boto.connect_s3(settings.CERT_AWS_ID, settings.CERT_AWS_KEY)
+            bucket = s3_conn.get_bucket(BUCKET)
+            try:
+                key = Key(bucket, name=dest_path)
+                key.set_contents_from_filename(file_name, policy='public-read')
+            except:
+                raise
+            else:
+                log.info("uploaded {local} to {s3path}".format(local=file_name, s3path=dest_path))
+        elif copy_to_webroot:
+            publish_dest = os.path.join(cert_web_root, dest_path)
+            try:
+                dirname = os.path.dirname(publish_dest)
+                if not os.path.exists(dirname):
+                    os.makedirs(dirname)
+                shutil.copy(file_name, publish_dest)
+            except:
+                raise
+            else:
+                log.info("published {local} to {web}".format(local=file_name, web=publish_dest))
+
+        if cleanup:
+            if os.path.exists(file_path):
+                shutil.rmtree(file_path)
+
+        return download_url
+
+    def _ensure_dir(self, f):
+        d = os.path.dirname(f)
+        if not os.path.exists(d):
+            os.makedirs(d)
