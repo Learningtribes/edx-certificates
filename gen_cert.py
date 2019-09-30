@@ -322,6 +322,7 @@ class CertificateGen(object):
         certificates_path = os.path.join(self.dir_prefix, S3_CERT_PATH)
         verify_path = os.path.join(self.dir_prefix, S3_VERIFY_PATH)
         filename = "{0}_{1}_Certificate.pdf".format(username, self.course_id)
+        filename = filename.replace(":", "-")
 
         (download_uuid, verify_uuid, download_url) = self._generate_certificate(student_name=name,
                                                                                 download_dir=certificates_path,
@@ -2087,6 +2088,7 @@ class CertificateExport(object):
     ):
         time_now = datetime.datetime.now()
         file_name = '{course}_{date}.zip'.format(course=self.course_id, date=time_now)
+        file_name = file_name.replace(":", "-")
         file_path = os.path.join(self.dir_prefix, S3_CERT_PATH, 'certs-zip')
         file_name = os.path.join(file_path, file_name)
         self._ensure_dir(file_name)
