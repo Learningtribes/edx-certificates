@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 from argparse import ArgumentParser, RawTextHelpFormatter
 import logging.config
 import json
