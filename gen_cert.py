@@ -186,8 +186,8 @@ def autoscale_text(page, string, max_fontsize, max_leading, max_height, max_widt
 class CertificateGen(object):
     """Manages the pdf, signatures, and S3 bucket for course certificates."""
 
-    def __init__(self, course_id, template_pdf=None, aws_id=None, aws_key=None, dir_prefix=None, long_org=None,
-                 long_course=None, pdf_info=None):
+    def __init__(self, course_id, employee_id, template_pdf=None, aws_id=None, aws_key=None, dir_prefix=None,
+                 long_org=None, long_course=None, pdf_info=None):
         """Load a pdf template and initialize
 
         Multiple certificates can be generated and uploaded for a single course.
@@ -224,6 +224,7 @@ class CertificateGen(object):
         self.issued_date = None
         self.json_date = None
         self.score = 0
+        self.employee_id = employee_id
 
         def interstitial_factory():
             """ Generate default values for interstitial_texts defaultdict """
@@ -675,6 +676,8 @@ class CertificateGen(object):
                     continue
                 if '{name}' in sentence:
                     paragraph_string = sentence.format(name=student_name.decode('utf-8'))
+                elif '{employee_id}' in sentence:
+                    paragraph_string = sentence.format(employee_id=self.employee_id)
                 elif '{issued_date}' in sentence:
                     paragraph_string = sentence.format(issued_date=self.issued_date)
                 elif '{course_name}' in sentence:

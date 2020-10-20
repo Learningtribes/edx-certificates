@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
 from argparse import ArgumentParser, RawTextHelpFormatter
 import logging.config
 import json
@@ -132,6 +130,7 @@ def main():
         else:
             try:
                 username = xqueue_body['username']
+                employee_id = xqueue_body['employee_id']
                 course_name = xqueue_body['course_name']
                 name = xqueue_body['name']
                 template_pdf = xqueue_body.get('template_pdf', None)
@@ -147,6 +146,7 @@ def main():
                     log.info("creating a new cert object")
                     cert = CertificateGen(
                         course_id,
+                        employee_id,
                         template_pdf,
                         aws_id=args.aws_id,
                         aws_key=args.aws_key,
