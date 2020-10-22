@@ -671,25 +671,21 @@ class CertificateGen(object):
             else:
                 style = ParagraphStyle(name=font.lower(), leading=10, fontName=font)
             style.alignment = TA_CENTER
+
+            paremeters = {
+                "name": student_name.decode('utf-8'),
+                "employee_id": self.employee_id,
+                "issued_date": self.issued_date,
+                "course_name": self.long_course.decode('utf-8'),
+                "grade": self.score,
+                "year": self.json_date['year'],
+                "month": self.json_date['month'],
+                "day": self.json_date['day']
+            }
             for sentence, info in self.pdf_info.items():
                 if sentence == 'font' or sentence == "template_dir":
                     continue
-                if '{name}' in sentence:
-                    paragraph_string = sentence.format(name=student_name.decode('utf-8'))
-                elif '{employee_id}' in sentence:
-                    paragraph_string = sentence.format(employee_id=self.employee_id)
-                elif '{issued_date}' in sentence:
-                    paragraph_string = sentence.format(issued_date=self.issued_date)
-                elif '{course_name}' in sentence:
-                    paragraph_string = sentence.format(course_name=self.long_course.decode('utf-8'))
-                elif '{grade}' in sentence:
-                    paragraph_string = sentence.format(grade=self.score)
-                elif '{year}' in sentence and '{month}' in sentence and '{day}' in sentence:
-                    paragraph_string = sentence.format(year=self.json_date['year'],
-                                                       month=self.json_date['month'],
-                                                       day=self.json_date['day'])
-                else:
-                    paragraph_string = sentence
+                paragraph_string = sentence.format(**paremeters)
 
                 try:
                     if info[2][5] == 'uppercase':
