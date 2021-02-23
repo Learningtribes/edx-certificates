@@ -181,6 +181,7 @@ def main():
                  verify_uuid,
                  download_url) = cert.create_and_upload(name.encode('utf-8'),
                                                         username,
+                                                        employee_id,
                                                         grade=grade,
                                                         designation=designation,
                                                         issued_date=issued_date,
