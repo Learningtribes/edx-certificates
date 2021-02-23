@@ -146,7 +146,6 @@ def main():
                     log.info("creating a new cert object")
                     cert = CertificateGen(
                         course_id,
-                        employee_id,
                         template_pdf,
                         aws_id=args.aws_id,
                         aws_key=args.aws_key,
@@ -181,6 +180,7 @@ def main():
                  verify_uuid,
                  download_url) = cert.create_and_upload(name.encode('utf-8'),
                                                         username,
+                                                        employee_id,
                                                         grade=grade,
                                                         designation=designation,
                                                         issued_date=issued_date,

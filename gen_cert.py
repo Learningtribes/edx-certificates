@@ -186,7 +186,7 @@ def autoscale_text(page, string, max_fontsize, max_leading, max_height, max_widt
 class CertificateGen(object):
     """Manages the pdf, signatures, and S3 bucket for course certificates."""
 
-    def __init__(self, course_id, employee_id, template_pdf=None, aws_id=None, aws_key=None, dir_prefix=None,
+    def __init__(self, course_id, template_pdf=None, aws_id=None, aws_key=None, dir_prefix=None,
                  long_org=None, long_course=None, pdf_info=None):
         """Load a pdf template and initialize
 
@@ -224,7 +224,6 @@ class CertificateGen(object):
         self.issued_date = None
         self.json_date = None
         self.score = 0
-        self.employee_id = employee_id
 
         def interstitial_factory():
             """ Generate default values for interstitial_texts defaultdict """
@@ -285,6 +284,7 @@ class CertificateGen(object):
         self,
         name,
         username,
+        employee_id,
         upload=settings.S3_UPLOAD,
         cleanup=True,
         copy_to_webroot=settings.COPY_TO_WEB_ROOT,
@@ -326,6 +326,7 @@ class CertificateGen(object):
         filename = filename.replace(":", "-")
 
         (download_uuid, verify_uuid, download_url) = self._generate_certificate(student_name=name,
+                                                                                employee_id=employee_id,
                                                                                 download_dir=certificates_path,
                                                                                 verify_dir=verify_path,
                                                                                 grade=grade,
@@ -377,6 +378,7 @@ class CertificateGen(object):
     def _generate_certificate(
         self,
         student_name,
+        employee_id,
         download_dir,
         verify_dir,
         filename=TARGET_FILENAME,
@@ -403,6 +405,7 @@ class CertificateGen(object):
             filename,
             grade,
             designation,
+            employee_id=employee_id
         )
 
     def _generate_v1_certificate(
@@ -413,6 +416,7 @@ class CertificateGen(object):
         filename=TARGET_FILENAME,
         grade=None,
         designation=None,
+        employee_id=None
     ):
         # A4 page size is 297mm x 210mm
 
@@ -674,7 +678,7 @@ class CertificateGen(object):
 
             paremeters = {
                 "name": student_name.decode('utf-8'),
-                "employee_id": self.employee_id,
+                "employee_id": employee_id,
                 "issued_date": self.issued_date,
                 "course_name": self.long_course.decode('utf-8'),
                 "grade": self.score,
