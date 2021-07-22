@@ -718,7 +718,7 @@ class CertificateGen(object):
                 l.warning(info[0][0])
                 if string_width > info[0][0]:
                     str_len = len(paragraph_string)
-                    half = info[0][0] * str_len / string_width
+                    half = int(info[0][0] * str_len / string_width)
                     paragraph_string_1 = paragraph_string[:half]
                     paragraph_string_2 = paragraph_string[half:]
                     if italic:
