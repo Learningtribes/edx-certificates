@@ -706,6 +706,7 @@ class CertificateGen(object):
 
                 string_width = stringWidth(paragraph_string, font, style.fontSize) / mm
                 l.warning("========= certificate ===========")
+                l.warning(paragraph_string)
                 l.warning(string_width)
                 l.warning(info[0][0])
                 if string_width >= info[0][0]:
