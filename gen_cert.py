@@ -734,7 +734,7 @@ class CertificateGen(object):
 
                     paragraph = Paragraph(paragraph_string_2, style)
                     paragraph.wrapOn(c, info[0][0] * mm, info[0][1] * mm)
-                    paragraph.drawOn(c, info[1][0] * mm, (info[1][1] + style.fontSize*1.5) * mm)
+                    paragraph.drawOn(c, info[1][0] * mm, (info[1][1] - style.fontSize*1.5) * mm)
 
                 else:
                     if italic:
