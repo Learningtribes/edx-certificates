@@ -704,6 +704,13 @@ class CertificateGen(object):
                 italic = info[2][3]
                 bold = info[2][2]
 
+                if info[2][4] == 'center':
+                    style.alignment = TA_CENTER
+                elif info[2][4] == 'left':
+                    style.alignment = TA_LEFT
+                else:
+                    style.alignment = TA_RIGHT
+
                 string_width = stringWidth(paragraph_string, font, style.fontSize) / mm
                 l.warning("========= certificate ===========")
                 l.warning(paragraph_string)
@@ -711,24 +718,33 @@ class CertificateGen(object):
                 l.warning(info[0][0])
                 if string_width >= info[0][0]:
                     str_len = len(paragraph_string)
-                    half = str_len/2 + 5
-                    paragraph_string = paragraph_string[:half] + '<br />\n' + paragraph_string[half:]
-                l.warning(paragraph_string)
+                    half = str_len/2 + 1
+                    paragraph_string_1 = paragraph_string[:half]
+                    paragraph_string_2 = paragraph_string[half:]
+                    if italic:
+                        paragraph_string_1 = '<i>' + paragraph_string_1 + '</i>'
+                        paragraph_string_2 = '<i>' + paragraph_string_2 + '</i>'
+                    if bold:
+                        paragraph_string_1 = '<b>' + paragraph_string_1 + '</b>'
+                        paragraph_string_2 = '<b>' + paragraph_string_2 + '</b>'
 
-                if info[2][4] == 'center':
-                    style.alignment = TA_CENTER
-                elif info[2][4] == 'left':
-                    style.alignment = TA_LEFT
+                    paragraph = Paragraph(paragraph_string_1, style)
+                    paragraph.wrapOn(c, info[0][0] * mm, info[0][1] * mm)
+                    paragraph.drawOn(c, info[1][0] * mm, info[1][1] * mm)
+
+                    paragraph = Paragraph(paragraph_string_2, style)
+                    paragraph.wrapOn(c, info[0][0] * mm, info[0][1] * mm)
+                    paragraph.drawOn(c, info[1][0] * mm, (info[1][1] + style.fontSize*1.5) * mm)
+
                 else:
-                    style.alignment = TA_RIGHT
-                if italic:
-                    paragraph_string = '<i>' + paragraph_string + '</i>'
-                if bold:
-                    paragraph_string = '<b>' + paragraph_string + '</b>'
+                    if italic:
+                        paragraph_string = '<i>' + paragraph_string + '</i>'
+                    if bold:
+                        paragraph_string = '<b>' + paragraph_string + '</b>'
 
-                paragraph = Paragraph(paragraph_string, style)
-                paragraph.wrapOn(c, info[0][0]*mm, info[0][1]*mm)
-                paragraph.drawOn(c, info[1][0]*mm, info[1][1]*mm)
+                    paragraph = Paragraph(paragraph_string, style)
+                    paragraph.wrapOn(c, info[0][0]*mm, info[0][1]*mm)
+                    paragraph.drawOn(c, info[1][0]*mm, info[1][1]*mm)
 
         c.showPage()
         c.save()
