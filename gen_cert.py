@@ -458,10 +458,10 @@ class CertificateGen(object):
         addMapping('Klavika-Light', 1, 1, 'Klavika-Medium-Italic')
 
         # add Georgia
-        addMapping('Georgia', 0, 0, 'Georgia-Regular')
-        addMapping('Georgia', 0, 1, 'Georgia-Italic')
-        addMapping('Georgia', 1, 0, 'Georgia-Bold')
-        addMapping('Georgia', 1, 1, 'Georgia-BoldItalic')
+        addMapping('Georgia', 0, 0, 'Georgia')
+        addMapping('Georgia', 0, 1, 'Georgia')
+        addMapping('Georgia', 1, 0, 'Georgia')
+        addMapping('Georgia', 1, 1, 'Georgia')
 
         styleArial = ParagraphStyle(name="arial", leading=10, fontName='Arial Unicode')
         styleOpenSans = ParagraphStyle(name="opensans-regular", leading=10, fontName='OpenSans-Regular')
