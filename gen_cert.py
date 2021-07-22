@@ -465,6 +465,7 @@ class CertificateGen(object):
         styleArial = ParagraphStyle(name="arial", leading=10, fontName='Arial Unicode')
         styleOpenSans = ParagraphStyle(name="opensans-regular", leading=10, fontName='OpenSans-Regular')
         styleOpenSansLight = ParagraphStyle(name="opensans-light", leading=10, fontName='OpenSans-Light')
+        styleSerif = ParagraphStyle(name="droidserif", leading=10, fontName='DroidSerif')
 
         if not self.pdf_info:
             # if there is no pdf template config in django admin,
@@ -677,6 +678,8 @@ class CertificateGen(object):
             font = self.pdf_info.get('font')
             if font == 'Arial':
                 style = styleArial
+            elif font == 'DroidSerif':
+                style = styleSerif
             else:
                 style = ParagraphStyle(name=font.lower(), leading=10, fontName=font)
             style.alignment = TA_CENTER
