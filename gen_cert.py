@@ -457,7 +457,7 @@ class CertificateGen(object):
         addMapping('Klavika-Light', 1, 0, 'Klavika-Medium')
         addMapping('Klavika-Light', 1, 1, 'Klavika-Medium-Italic')
 
-        addMapping('DroidSerif', 0, 0, 'DroidSerif')
+        addMapping('DroidSerif', 0, 0, 'DroidSerif-Regular')
         addMapping('DroidSerif', 0, 1, 'DroidSerif-Italic')
         addMapping('DroidSerif', 1, 0, 'DroidSerif-Bold')
         addMapping('DroidSerif', 1, 1, 'DroidSerif-BoldItalic')
