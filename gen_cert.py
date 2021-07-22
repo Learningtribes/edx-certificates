@@ -457,6 +457,11 @@ class CertificateGen(object):
         addMapping('Klavika-Light', 1, 0, 'Klavika-Medium')
         addMapping('Klavika-Light', 1, 1, 'Klavika-Medium-Italic')
 
+        addMapping('DroidSerif', 0, 0, 'DroidSerif')
+        addMapping('DroidSerif', 0, 1, 'DroidSerif-Italic')
+        addMapping('DroidSerif', 1, 0, 'DroidSerif-Bold')
+        addMapping('DroidSerif', 1, 1, 'DroidSerif-BoldItalic')
+
         styleArial = ParagraphStyle(name="arial", leading=10, fontName='Arial Unicode')
         styleOpenSans = ParagraphStyle(name="opensans-regular", leading=10, fontName='OpenSans-Regular')
         styleOpenSansLight = ParagraphStyle(name="opensans-light", leading=10, fontName='OpenSans-Light')
