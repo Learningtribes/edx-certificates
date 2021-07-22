@@ -704,6 +704,12 @@ class CertificateGen(object):
                 italic = info[2][3]
                 bold = info[2][2]
 
+                string_width = stringWidth(paragraph_string, font, style.fontSize) / mm
+                if string_width >= info[0][0]:
+                    str_len = len(paragraph_string)
+                    half = str_len/2 + 1
+                    paragraph_string = paragraph_string[:half] + '<br/>' + paragraph_string[half:]
+
                 if info[2][4] == 'center':
                     style.alignment = TA_CENTER
                 elif info[2][4] == 'left':
