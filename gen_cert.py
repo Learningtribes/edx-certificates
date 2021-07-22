@@ -712,7 +712,8 @@ class CertificateGen(object):
                 if string_width >= info[0][0]:
                     str_len = len(paragraph_string)
                     half = str_len/2 + 1
-                    paragraph_string = paragraph_string[:half]
+                    paragraph_string = paragraph_string[:half] + '<br> \n' + paragraph_string[half:]
+                l.warning(paragraph_string)
 
                 if info[2][4] == 'center':
                     style.alignment = TA_CENTER
