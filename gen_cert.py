@@ -711,7 +711,7 @@ class CertificateGen(object):
                 l.warning(info[0][0])
                 if string_width >= info[0][0]:
                     str_len = len(paragraph_string)
-                    half = str_len/2 + 1
+                    half = str_len/2 + 5
                     paragraph_string = paragraph_string[:half] + '<br />\n' + paragraph_string[half:]
                 l.warning(paragraph_string)
 
