@@ -457,6 +457,12 @@ class CertificateGen(object):
         addMapping('Klavika-Light', 1, 0, 'Klavika-Medium')
         addMapping('Klavika-Light', 1, 1, 'Klavika-Medium-Italic')
 
+        # add Georgia
+        addMapping('Georgia', 0, 0, 'Georgia')
+        addMapping('Georgia', 0, 1, 'Georgia-Italic')
+        addMapping('Georgia', 1, 0, 'Georgia-Bold')
+        addMapping('Georgia', 1, 1, 'Georgia-BoldItalic')
+
         styleArial = ParagraphStyle(name="arial", leading=10, fontName='Arial Unicode')
         styleOpenSans = ParagraphStyle(name="opensans-regular", leading=10, fontName='OpenSans-Regular')
         styleOpenSansLight = ParagraphStyle(name="opensans-light", leading=10, fontName='OpenSans-Light')
@@ -710,14 +716,44 @@ class CertificateGen(object):
                     style.alignment = TA_LEFT
                 else:
                     style.alignment = TA_RIGHT
-                if italic:
-                    paragraph_string = '<i>' + paragraph_string + '</i>'
-                if bold:
-                    paragraph_string = '<b>' + paragraph_string + '</b>'
 
-                paragraph = Paragraph(paragraph_string, style)
-                paragraph.wrapOn(c, info[0][0]*mm, info[0][1]*mm)
-                paragraph.drawOn(c, info[1][0]*mm, info[1][1]*mm)
+                string_width = stringWidth(paragraph_string, font, style.fontSize) / mm
+
+                # If the paragraph is too long
+                if string_width > info[0][0]:
+                    str_len = len(paragraph_string)
+                    half = int(info[0][0] * str_len / string_width - 1)
+                    while half > 0:
+                        if paragraph_string[half] == " ":
+                            paragraph_string_1 = paragraph_string[:half]
+                            paragraph_string_2 = paragraph_string[half+1:]
+                            break
+                        else:
+                            half = half - 1
+                    if italic:
+                        paragraph_string_1 = '<i>' + paragraph_string_1 + '</i>'
+                        paragraph_string_2 = '<i>' + paragraph_string_2 + '</i>'
+                    if bold:
+                        paragraph_string_1 = '<b>' + paragraph_string_1 + '</b>'
+                        paragraph_string_2 = '<b>' + paragraph_string_2 + '</b>'
+
+                    paragraph = Paragraph(paragraph_string_1, style)
+                    paragraph.wrapOn(c, info[0][0] * mm, info[0][1] * mm)
+                    paragraph.drawOn(c, info[1][0] * mm, info[1][1] * mm)
+
+                    paragraph = Paragraph(paragraph_string_2, style)
+                    paragraph.wrapOn(c, info[0][0] * mm, info[0][1] * mm)
+                    paragraph.drawOn(c, info[1][0] * mm, (info[1][1] - style.fontSize/2) * mm)
+
+                else:
+                    if italic:
+                        paragraph_string = '<i>' + paragraph_string + '</i>'
+                    if bold:
+                        paragraph_string = '<b>' + paragraph_string + '</b>'
+
+                    paragraph = Paragraph(paragraph_string, style)
+                    paragraph.wrapOn(c, info[0][0]*mm, info[0][1]*mm)
+                    paragraph.drawOn(c, info[1][0]*mm, info[1][1]*mm)
 
         c.showPage()
         c.save()
