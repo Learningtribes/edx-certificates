@@ -718,15 +718,18 @@ class CertificateGen(object):
                     style.alignment = TA_RIGHT
 
                 string_width = stringWidth(paragraph_string, font, style.fontSize) / mm
-                l.warning("========= certificate ===========")
-                l.warning(paragraph_string)
-                l.warning(string_width)
-                l.warning(info[0][0])
+
+                # If the paragraph is too long
                 if string_width > info[0][0]:
                     str_len = len(paragraph_string)
-                    half = int(info[0][0] * str_len / string_width)
-                    paragraph_string_1 = paragraph_string[:half]
-                    paragraph_string_2 = paragraph_string[half:]
+                    half = int(info[0][0] * str_len / string_width - 1)
+                    while half > 0:
+                        if paragraph_string[half] == " ":
+                            paragraph_string_1 = paragraph_string[:half]
+                            paragraph_string_2 = paragraph_string[half+1:]
+                            break
+                        else:
+                            half = half - 1
                     if italic:
                         paragraph_string_1 = '<i>' + paragraph_string_1 + '</i>'
                         paragraph_string_2 = '<i>' + paragraph_string_2 + '</i>'
