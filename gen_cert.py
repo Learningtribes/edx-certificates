@@ -224,6 +224,8 @@ class CertificateGen(object):
         self.issued_date = None
         self.json_date = None
         self.score = 0
+        self.duration = None
+        self.completion = None
 
         def interstitial_factory():
             """ Generate default values for interstitial_texts defaultdict """
@@ -293,6 +295,8 @@ class CertificateGen(object):
         designation=None,
         issued_date="Rolling",
         json_date=None,
+        duration=None,
+        completion_date="",
         score=0
     ):
         """
@@ -319,6 +323,8 @@ class CertificateGen(object):
         self.score = score
         self.issued_date = issued_date
         self.json_date = json_date
+        self.duration = duration
+        self.completion_date = completion_date
 
         certificates_path = os.path.join(self.dir_prefix, S3_CERT_PATH)
         verify_path = os.path.join(self.dir_prefix, S3_VERIFY_PATH)
@@ -688,6 +694,8 @@ class CertificateGen(object):
                 "issued_date": self.issued_date,
                 "course_name": self.long_course.decode('utf-8'),
                 "grade": self.score,
+                "duration": self.duration,
+                "completion_date": self.completion_date,
                 "year": self.json_date['year'],
                 "month": self.json_date['month'],
                 "day": self.json_date['day']
