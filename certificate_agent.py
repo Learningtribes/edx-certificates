@@ -189,7 +189,8 @@ def main():
                                                         json_date=json_date,
                                                         score=score,
                                                         duration=duration,
-                                                        completion_date=completion_date)
+                                                        completion_date=completion_date,
+                                                        )
 
             except Exception as e:
                 # global exception handler, if anything goes wrong
