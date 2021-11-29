@@ -65,7 +65,7 @@ def main():
             log.debug('queue length: {0}'.format(manager.get_length()))
 
         certdata = manager.get_submission()
-        log.info('xqueue response: {0}'.format(certdata))
+        log.debug('xqueue response: {0}'.format(certdata))
         try:
             xqueue_body = json.loads(certdata['xqueue_body'])
             xqueue_header = json.loads(certdata['xqueue_header'])
