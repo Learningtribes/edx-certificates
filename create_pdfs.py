@@ -116,6 +116,8 @@ def main():
                 long_org=args.long_org,
                 long_course=args.long_course,
                 issued_date=args.issued_date,
+                duration=args.duration,
+                completion_date=args.completion_date,
             )
             title = None
             if args.assign_title:
