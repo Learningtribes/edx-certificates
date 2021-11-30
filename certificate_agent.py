@@ -137,6 +137,8 @@ def main():
                 grade = xqueue_body.get('grade', None)
                 issued_date = xqueue_body.get('issued_date', None)
                 json_date = xqueue_body.get('json_date', None)
+                duration = xqueue_body.get('duration', None)
+                completion_date = xqueue_body.get('completion_date', None)
                 designation = xqueue_body.get('designation', None)
                 score = xqueue_body.get('score', 0)
                 pdf_info = xqueue_body.get('pdf_info', None)
@@ -185,7 +187,10 @@ def main():
                                                         designation=designation,
                                                         issued_date=issued_date,
                                                         json_date=json_date,
-                                                        score=score)
+                                                        score=score,
+                                                        duration=duration,
+                                                        completion_date=completion_date,
+                                                        )
 
             except Exception as e:
                 # global exception handler, if anything goes wrong
