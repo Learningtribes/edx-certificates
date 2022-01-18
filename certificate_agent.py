@@ -181,7 +181,7 @@ def main():
                 (download_uuid,
                  verify_uuid,
                  download_url) = cert.create_and_upload(name.encode('utf-8'),
-                                                        username,
+                                                        username.encode('utf-8'),
                                                         employee_id,
                                                         grade=grade,
                                                         designation=designation,
@@ -207,7 +207,7 @@ def main():
                     "({username} {course_id}) "
                     "{exception_type}: {exception}: "
                     "{file_name}:{line_number}".format(
-                        username=username,
+                        username=username.encode('utf-8'),
                         course_id=course_id,
                         exception_type=exc_type,
                         exception=e,
