@@ -738,6 +738,11 @@ class CertificateGen(object):
                             break
                         else:
                             half = half - 1
+                    # If `blank` doesn't exist in content.
+                    if 'paragraph_string_1' not in locals():
+                        paragraph_string_1 = paragraph_string
+                        paragraph_string_2 = ''
+
                     if italic:
                         paragraph_string_1 = '<i>' + paragraph_string_1 + '</i>'
                         paragraph_string_2 = '<i>' + paragraph_string_2 + '</i>'
