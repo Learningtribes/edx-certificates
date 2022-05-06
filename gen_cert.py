@@ -469,6 +469,12 @@ class CertificateGen(object):
         addMapping('Georgia', 1, 0, 'Georgia-Bold')
         addMapping('Georgia', 1, 1, 'Georgia-BoldItalic')
 
+        # add Arial Narrow
+        addMapping('Arial-Narrow', 0, 0, 'Arial-Narrow')
+        addMapping('Arial-Narrow', 0, 1, 'Arial-Narrow-Italic')
+        addMapping('Arial-Narrow', 1, 0, 'Arial-Narrow-Bold')
+        addMapping('Arial-Narrow', 1, 1, 'Arial-Narrow-Bold-Italic')
+
         styleArial = ParagraphStyle(name="arial", leading=10, fontName='Arial Unicode')
         styleOpenSans = ParagraphStyle(name="opensans-regular", leading=10, fontName='OpenSans-Regular')
         styleOpenSansLight = ParagraphStyle(name="opensans-light", leading=10, fontName='OpenSans-Light')
