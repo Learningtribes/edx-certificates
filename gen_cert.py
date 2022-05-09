@@ -728,7 +728,7 @@ class CertificateGen(object):
                 string_width = stringWidth(paragraph_string, font, style.fontSize) / mm
 
                 # If the paragraph is too long
-                if string_width > info[0][0]:
+                if string_width > info[0][0] and " " in paragraph_string:
                     str_len = len(paragraph_string)
                     half = int(info[0][0] * str_len / string_width - 1)
                     while half > 0:
@@ -738,10 +738,6 @@ class CertificateGen(object):
                             break
                         else:
                             half = half - 1
-                    # If `blank` doesn't exist in content.
-                    if 'paragraph_string_1' not in locals():
-                        paragraph_string_1 = paragraph_string
-                        paragraph_string_2 = ''
 
                     if italic:
                         paragraph_string_1 = '<i>' + paragraph_string_1 + '</i>'
