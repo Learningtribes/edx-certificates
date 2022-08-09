@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 
 import copy
 import datetime
@@ -352,7 +353,7 @@ class CertificateGen(object):
                     for filename in filenames:
                         local_path = os.path.join(dirpath, filename)
                         dest_path = os.path.relpath(local_path, start=self.dir_prefix)
-                        publish_dest = os.path.join(cert_web_root, dest_path).encode('utf-8')
+                        publish_dest = os.path.join(cert_web_root, dest_path)
 
                         if upload:
                             try:
