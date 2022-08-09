@@ -328,7 +328,7 @@ class CertificateGen(object):
 
         certificates_path = os.path.join(self.dir_prefix, S3_CERT_PATH)
         verify_path = os.path.join(self.dir_prefix, S3_VERIFY_PATH)
-        filename = "{0}_{1}_Certificate.pdf".format(username.encode('utf-8'), self.course_id)
+        filename = "{0}_{1}_Certificate.pdf".format(username, self.course_id)
         filename = filename.replace(":", "-")
 
         (download_uuid, verify_uuid, download_url) = self._generate_certificate(student_name=name,
@@ -350,7 +350,7 @@ class CertificateGen(object):
             for subtree in (my_certs_path, my_verify_path):
                 for dirpath, dirnames, filenames in os.walk(subtree):
                     for filename in filenames:
-                        local_path = os.path.join(dirpath, filename)
+                        local_path = os.path.join(dirpath, filename.encode('utf-8'))
                         dest_path = os.path.relpath(local_path, start=self.dir_prefix)
                         publish_dest = os.path.join(cert_web_root, dest_path)
 
