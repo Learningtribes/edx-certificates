@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
 
 import copy
 import datetime
@@ -11,6 +10,7 @@ import shutil
 import StringIO
 import urllib
 import uuid
+import unicodedata
 import zipfile
 
 from reportlab.platypus import Paragraph
@@ -329,6 +329,7 @@ class CertificateGen(object):
 
         certificates_path = os.path.join(self.dir_prefix, S3_CERT_PATH)
         verify_path = os.path.join(self.dir_prefix, S3_VERIFY_PATH)
+        username = unicodedata.normalize('NFD', username).encode('ascii', 'ignore')
         filename = "{0}_{1}_Certificate.pdf".format(username, self.course_id)
         filename = filename.replace(":", "-")
 
