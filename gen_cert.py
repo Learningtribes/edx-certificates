@@ -350,9 +350,9 @@ class CertificateGen(object):
             for subtree in (my_certs_path, my_verify_path):
                 for dirpath, dirnames, filenames in os.walk(subtree):
                     for filename in filenames:
-                        local_path = os.path.join(dirpath, filename.encode('utf-8'))
+                        local_path = os.path.join(dirpath, filename)
                         dest_path = os.path.relpath(local_path, start=self.dir_prefix)
-                        publish_dest = os.path.join(cert_web_root, dest_path)
+                        publish_dest = os.path.join(cert_web_root, dest_path).encode('utf-8')
 
                         if upload:
                             try:
