@@ -352,7 +352,7 @@ class CertificateGen(object):
                     for filename in filenames:
                         local_path = os.path.join(dirpath, filename)
                         dest_path = os.path.relpath(local_path, start=self.dir_prefix)
-                        publish_dest = os.path.join(cert_web_root, dest_path).decode('utf-8')
+                        publish_dest = os.path.join(cert_web_root, dest_path).encode('utf-8')
 
                         if upload:
                             try:
