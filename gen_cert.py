@@ -2148,7 +2148,7 @@ class CertificateExport(object):
         certs_base_dir = '/edx/var/certs/www-data/downloads'
         zip_handler = zipfile.ZipFile(file_name, 'w', zipfile.ZIP_DEFLATED)
         for f in certs_path:
-            zip_handler.write(os.path.join(certs_base_dir, f), f.rsplit('/')[-1])
+            zip_handler.write(os.path.join(certs_base_dir, f.decode('utf-8')), f.rsplit('/')[-1])
         zip_handler.close()
 
         dest_path = os.path.relpath(file_name, start=self.dir_prefix)
