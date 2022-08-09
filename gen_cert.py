@@ -329,7 +329,7 @@ class CertificateGen(object):
 
         certificates_path = os.path.join(self.dir_prefix, S3_CERT_PATH)
         verify_path = os.path.join(self.dir_prefix, S3_VERIFY_PATH)
-        username = unicodedata.normalize('NFD', unicode(username)).encode('ascii', 'ignore')
+        username = unicodedata.normalize('NFD', unicode(username.encode('utf-8'))).encode('ascii', 'ignore')
         filename = "{0}_{1}_Certificate.pdf".format(username, self.course_id)
         filename = filename.replace(":", "-")
 
