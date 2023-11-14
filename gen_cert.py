@@ -477,6 +477,12 @@ class CertificateGen(object):
         addMapping('Arial-Narrow', 1, 0, 'Arial-Narrow-Bold')
         addMapping('Arial-Narrow', 1, 1, 'Arial-Narrow-Bold-Italic')
 
+        # add font Noto Sans
+        addMapping('NotoSans-Regular', 0, 0, 'NotoSans-Regular')
+        addMapping('NotoSans-Regular', 0, 1, 'NotoSans-Italic')
+        addMapping('NotoSans-Regular', 1, 0, 'NotoSans-Bold')
+        addMapping('NotoSans-Regular', 1, 1, 'NotoSans-BoldItalic')
+
         styleArial = ParagraphStyle(name="arial", leading=10, fontName='Arial Unicode')
         styleOpenSans = ParagraphStyle(name="opensans-regular", leading=10, fontName='OpenSans-Regular')
         styleOpenSansLight = ParagraphStyle(name="opensans-light", leading=10, fontName='OpenSans-Light')
