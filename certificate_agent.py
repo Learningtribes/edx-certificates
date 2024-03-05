@@ -18,7 +18,7 @@ try:
     from PIL import Image
     from io import BytesIO
 except Exception as e:
-    logging.error("Import Error: %s" % e)
+    log.info("DEBUG: Import Error: %s" % e)
 
 def parse_args(args=sys.argv[1:]):
     parser = ArgumentParser(description="""
@@ -54,19 +54,19 @@ def parse_args(args=sys.argv[1:]):
     return parser.parse_args()
 
 
-# def pdf_to_png(pdf_url):
-#     response = requests.get(pdf_url)
-#     pdf_bytes = response.content
-#     pdf_reader = PdfReader(BytesIO(pdf_bytes))
+def pdf_to_png(pdf_url):
+    response = requests.get(pdf_url)
+    pdf_bytes = response.content
+    pdf_reader = PdfReader(BytesIO(pdf_bytes))
 
-#     page = pdf_reader.pages[0]
-#     page_data = page.extract_text()
-#     with Image.open(BytesIO(page_data)) as img:
-#         pdf_path_without_extension = os.path.splitext(pdf_url)[0]
-#         png_path = pdf_path_without_extension + ".png"
-#         img.save(png_path, "PNG")
+    page = pdf_reader.pages[0]
+    page_data = page.extract_text()
+    with Image.open(BytesIO(page_data)) as img:
+        pdf_path_without_extension = os.path.splitext(pdf_url)[0]
+        png_path = pdf_path_without_extension + ".png"
+        img.save(png_path, "PNG")
 
-#         return png_path
+        return png_path
 
 
 def main():
@@ -263,8 +263,12 @@ def main():
                     continue
 
             # now let's convert PDF into PNG file
-            #png_path = pdf_to_png(download_url)
-            log.info("DEBUG 3: download_url: %s", download_url)
+            try:
+                png_path = pdf_to_png(download_url)
+            except Exception as e:
+                  log.info("DEBUG 4: Convertion Error: %s" % e)
+
+            log.info("DEBUG 3: download_url: %s" % download_url)
 
             # post result back to the LMS
             xqueue_reply = {
