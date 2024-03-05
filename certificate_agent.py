@@ -8,14 +8,17 @@ import settings
 from openedx_certificates.queue_xqueue import XQueuePullManager
 from gen_cert import CertificateGen, CertificateExport
 
-# import requests
-# from pyPdf2 import PdfReader
-# from PIL import Image
-# from io import BytesIO
 
 logging.config.dictConfig(settings.LOGGING)
 log = logging.getLogger('certificates: ' + __name__)
 
+try:
+    import requests
+    from pyPdf2 import PdfReader
+    from PIL import Image
+    from io import BytesIO
+except Exception as e:
+    logging.error("Import Error: %s" % e)
 
 def parse_args(args=sys.argv[1:]):
     parser = ArgumentParser(description="""
