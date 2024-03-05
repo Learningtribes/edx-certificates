@@ -14,7 +14,7 @@ log = logging.getLogger('certificates: ' + __name__)
 
 try:
     import requests
-    from pyPdf2 import PdfFileReader
+    from PyPDF2 import PdfFileReader
     from PIL import Image
     from io import BytesIO
 except Exception as e:
