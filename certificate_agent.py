@@ -14,7 +14,7 @@ log = logging.getLogger('certificates: ' + __name__)
 
 try:
     import requests
-    from pyPdf2 import PdfReader
+    from pyPdf2 import PdfFileReader
     from PIL import Image
     from io import BytesIO
 except Exception as e:
@@ -57,7 +57,7 @@ def parse_args(args=sys.argv[1:]):
 def pdf_to_png(pdf_url):
     response = requests.get(pdf_url)
     pdf_bytes = response.content
-    pdf_reader = PdfReader(BytesIO(pdf_bytes))
+    pdf_reader = PdfFileReader(BytesIO(pdf_bytes))
 
     page = pdf_reader.pages[0]
     page_data = page.extract_text()
