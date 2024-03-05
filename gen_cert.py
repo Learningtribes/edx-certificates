@@ -807,9 +807,7 @@ class CertificateGen(object):
             download_url
         )
 
-        log.info("download_uuid: %s", download_uuid)
-        log.info("verify_uuid: %s", verify_uuid)
-        log.info("download_url: %s", download_url)
+        log.info("DEBUG 1: download_uuid: %s", download_uuid)
 
         return (download_uuid, verify_uuid, download_url)
 
@@ -1108,9 +1106,7 @@ class CertificateGen(object):
             download_url
         )
 
-        log.info("download_uuid: %s", download_uuid)
-        log.info("verify_uuid: %s", verify_uuid)
-        log.info("download_url: %s", download_url)
+        log.info("DEBUG 2: download_uuid: %s", download_uuid)
 
         return (download_uuid, verify_uuid, download_url)
 
