@@ -8,10 +8,10 @@ import settings
 from openedx_certificates.queue_xqueue import XQueuePullManager
 from gen_cert import CertificateGen, CertificateExport
 
-import requests
-from pyPdf2 import PdfReader
-from PIL import Image
-from io import BytesIO
+# import requests
+# from pyPdf2 import PdfReader
+# from PIL import Image
+# from io import BytesIO
 
 logging.config.dictConfig(settings.LOGGING)
 log = logging.getLogger('certificates: ' + __name__)
@@ -51,19 +51,19 @@ def parse_args(args=sys.argv[1:]):
     return parser.parse_args()
 
 
-def pdf_to_png(pdf_url):
-    response = requests.get(pdf_url)
-    pdf_bytes = response.content
-    pdf_reader = PdfReader(BytesIO(pdf_bytes))
+# def pdf_to_png(pdf_url):
+#     response = requests.get(pdf_url)
+#     pdf_bytes = response.content
+#     pdf_reader = PdfReader(BytesIO(pdf_bytes))
 
-    page = pdf_reader.pages[0]
-    page_data = page.extract_text()
-    with Image.open(BytesIO(page_data)) as img:
-        pdf_path_without_extension = os.path.splitext(pdf_url)[0]
-        png_path = pdf_path_without_extension + ".png"
-        img.save(png_path, "PNG")
+#     page = pdf_reader.pages[0]
+#     page_data = page.extract_text()
+#     with Image.open(BytesIO(page_data)) as img:
+#         pdf_path_without_extension = os.path.splitext(pdf_url)[0]
+#         png_path = pdf_path_without_extension + ".png"
+#         img.save(png_path, "PNG")
 
-        return png_path
+#         return png_path
 
 
 def main():
@@ -260,7 +260,8 @@ def main():
                     continue
 
             # now let's convert PDF into PNG file
-            png_path = pdf_to_png(download_url)
+            #png_path = pdf_to_png(download_url)
+            log.info("DEBUG 3: download_url: %s", download_url)
 
             # post result back to the LMS
             xqueue_reply = {
@@ -272,7 +273,7 @@ def main():
                     'username': username,
                     'course_id': course_id,
                     'url': download_url,
-                    'png_path': png_path,
+                    #'png_path': png_path,
                 }),
             }
             log.info("Posting result to the LMS: {0}".format(xqueue_reply))
