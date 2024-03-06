@@ -62,11 +62,14 @@ def pdf_to_png(pdf_url):
     page = pdf_reader.getPage(0)
     page_text = page.extractText()
 
+    # Decoding text to Unicode
+    page_text_unicode = page_text.encode('latin-1').decode('utf-8')
+
     # Rendering text into an image
     img = Image.new("RGB", (800, 600), "white")
     draw = ImageDraw.Draw(img)
     font = ImageFont.load_default()
-    draw.text((10, 10), page_text, font=font, fill="black", encoding="utf-8")
+    draw.text((10, 10), page_text_unicode, font=font, fill="black")
 
     # Save image
     pdf_path_without_extension = os.path.splitext(pdf_url)[0]
