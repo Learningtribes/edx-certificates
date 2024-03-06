@@ -15,7 +15,7 @@ log = logging.getLogger('certificates: ' + __name__)
 try:
     import requests
     from PyPDF2 import PdfFileReader
-    from PIL import Image
+    from PIL import Image, ImageDraw, ImageFont
     from io import BytesIO
 except Exception as e:
     log.info("DEBUG: Import Error: %s" % e)
@@ -62,12 +62,18 @@ def pdf_to_png(pdf_url):
     page = pdf_reader.getPage(0)
     page_text = page.extractText()
 
-    with Image.open(BytesIO(page_text.encode('utf-8'))) as img:
-        pdf_path_without_extension = os.path.splitext(pdf_url)[0]
-        png_path = pdf_path_without_extension + ".png"
-        img.save(png_path, "PNG")
+    # Rendering text into an image
+    img = Image.new("RGB", (800, 600), "white")
+    draw = ImageDraw.Draw(img)
+    font = ImageFont.load_default()
+    draw.text((10, 10), page_text, font=font, fill="black")
 
-        return png_path
+    # Save image
+    pdf_path_without_extension = os.path.splitext(pdf_url)[0]
+    png_path = pdf_path_without_extension + ".png"
+    img.save(png_path, "PNG")
+
+    return png_path
 
 
 def main():
@@ -267,9 +273,10 @@ def main():
             try:
                 png_path = pdf_to_png(download_url)
             except Exception as e:
-                  log.info("DEBUG 4: Convertion Error: %s" % e)
+                log.info("DEBUG 3: Convertion Error: %s" % e)
 
-            log.info("DEBUG 3: download_url: %s" % download_url)
+            log.info("DEBUG 4: download_url: %s" % download_url)
+            log.info("DEBUG 5: png_path: %s" % png_path)
 
             # post result back to the LMS
             xqueue_reply = {
