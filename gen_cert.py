@@ -43,6 +43,7 @@ from opaque_keys.edx.keys import CourseKey
 
 reportlab.rl_config.warnOnMissingFontGlyphs = 0
 
+from PIL import Image
 
 RE_ISODATES = re.compile("(?P<year>\d{4})-(?P<month>\d{2})-(?P<day>\d{2})")
 TEMPLATE_DIR = settings.TEMPLATE_DIR
@@ -799,6 +800,12 @@ class CertificateGen(object):
         output.write(outputStream)
         outputStream.close()
 
+        log.info("DEBUG v1: Starting Convertion...")
+
+        # Convert PDF into PNG
+        png_path = self._convert_pdf_to_png(filename)
+        log.info("DEBUG: png_path: %s" % png_path)
+
         self._generate_verification_page(
             student_name,
             filename,
@@ -807,9 +814,25 @@ class CertificateGen(object):
             download_url
         )
 
-        log.info("DEBUG 1: download_uuid: %s", download_uuid)
+        log.info("DEBUG v1: download_uuid: %s", download_uuid)
 
         return (download_uuid, verify_uuid, download_url)
+
+    def _convert_pdf_to_png(self, pdf_path):
+        png_path = os.path.splitext(pdf_path)[0] + ".png"
+
+        # Open PDF
+        try:
+            with open(pdf_path, "rb") as pdf_file:
+                pdf_reader = PdfFileReader(pdf_file)
+                page = pdf_reader.getPage(0)
+                img = Image.new("RGB", (page.mediaBox.getWidth(), page.mediaBox.getHeight()), "white")
+                page.render(img)
+                img.save(png_path, "PNG")
+        except Exception as e:
+            log.info("DEBUG: Convert Error: %s" % e)
+
+        return png_path
 
     def _generate_v2_certificate(
         self,

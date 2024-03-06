@@ -278,13 +278,13 @@ def main():
                     continue
 
             # now let's convert PDF into PNG file
-            try:
-                png_path = pdf_to_png(download_url)
-            except Exception as e:
-                log.info("DEBUG 3: Convertion Error: %s" % e)
+            #try:
+            #    png_path = pdf_to_png(download_url)
+            #except Exception as e:
+            #    log.info("DEBUG 3: Convertion Error: %s" % e)
 
             log.info("DEBUG 4: download_url: %s" % download_url)
-            log.info("DEBUG 5: png_path: %s" % png_path)
+            #log.info("DEBUG 5: png_path: %s" % png_path)
 
             # post result back to the LMS
             xqueue_reply = {
