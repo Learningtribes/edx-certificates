@@ -66,7 +66,7 @@ def pdf_to_png(pdf_url):
     img = Image.new("RGB", (800, 600), "white")
     draw = ImageDraw.Draw(img)
     font = ImageFont.load_default()
-    draw.text((10, 10), page_text, font=font, fill="black")
+    draw.text((10, 10), page_text, font=font, fill="black", encoding="utf-8")
 
     # Save image
     pdf_path_without_extension = os.path.splitext(pdf_url)[0]
