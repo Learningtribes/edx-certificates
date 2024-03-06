@@ -43,7 +43,7 @@ from opaque_keys.edx.keys import CourseKey
 
 reportlab.rl_config.warnOnMissingFontGlyphs = 0
 
-from PIL import Image
+from PIL import Image, ImageDraw
 
 RE_ISODATES = re.compile("(?P<year>\d{4})-(?P<month>\d{2})-(?P<day>\d{2})")
 TEMPLATE_DIR = settings.TEMPLATE_DIR
@@ -826,9 +826,15 @@ class CertificateGen(object):
             with open(pdf_path, "rb") as pdf_file:
                 pdf_reader = PdfFileReader(pdf_file)
                 page = pdf_reader.getPage(0)
-                img = Image.new("RGB", (page.mediaBox.getWidth(), page.mediaBox.getHeight()), "white")
-                page.render(img)
-                img.save(png_path, "PNG")
+
+                page_text = page.extractText()
+
+                if page_text.strip():
+                    img = Image.new("RGB", (int(page.mediaBox.getWidth()), int(page.mediaBox.getHeight())), "white")
+                    img_draw = ImageDraw.Draw(img)
+                    img_draw.text((10, 10), page_text, fill=(0, 0, 0))
+
+                    img.save(png_path, "PNG")
         except Exception as e:
             log.info("DEBUG: Convert Error: %s" % e)
 
