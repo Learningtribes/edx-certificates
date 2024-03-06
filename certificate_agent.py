@@ -60,7 +60,7 @@ def pdf_to_png(pdf_url):
     pdf_reader = PdfFileReader(BytesIO(pdf_bytes))
 
     page = pdf_reader.getPage(0)
-    page_text = page.extract_text()
+    page_text = page.extractText()
 
     with Image.open(BytesIO(page_text.encode())) as img:
         pdf_path_without_extension = os.path.splitext(pdf_url)[0]
