@@ -61,9 +61,11 @@ def pdf_to_png(pdf_url):
 
     page = pdf_reader.getPage(0)
     page_text = page.extractText()
+    log.info("DEBUG: page_text: %s" % page_text)
 
     # Decoding text to Unicode
     page_text_unicode = page_text.encode('utf-8')
+    log.info("DEBUG: page_text_unicode: %s" % page_text_unicode)
 
     # Rendering text into an image
     img = Image.new("RGB", (800, 600), "white")
@@ -73,6 +75,9 @@ def pdf_to_png(pdf_url):
 
     # Save image
     pdf_path_without_extension = os.path.splitext(pdf_url)[0]
+    log.info("DEBUG: pdf_path_without_extension: %s" % pdf_path_without_extension)
+    log.info("DEBUG: img: %s" % img)    
+
     png_path = pdf_path_without_extension + ".png"
     img.save(png_path, "PNG")
 
