@@ -15,9 +15,6 @@ log = logging.getLogger('certificates: ' + __name__)
 try:
     import requests
     from PyPDF2 import PdfFileReader
-    from reportlab.lib.pagesizes import letter
-    from reportlab.platypus import SimpleDocTemplate, Paragraph
-    from reportlab.lib.styles import getSampleStyleSheet
     from PIL import Image, ImageDraw, ImageFont
     from io import BytesIO
 except Exception as e:
@@ -65,17 +62,19 @@ def pdf_to_png(pdf_url):
     page = pdf_reader.getPage(0)
     page_text = page.extractText()
 
-    doc = SimpleDocTemplate("temp.pdf", pagesize=letter)
-    styles = getSampleStyleSheet()
-    flowables = [Paragraph(page_text, styles["Normal"])]
-    doc.build(flowables)
+    # Decoding text to Unicode
+    page_text_unicode = page_text.encode('utf-8')
 
-    img = Image.open("temp.pdf")
+    # Rendering text into an image
+    img = Image.new("RGB", (800, 600), "white")
+    draw = ImageDraw.Draw(img)
+    font = ImageFont.load_default()
+    draw.text((10, 10), page_text_unicode, font=font, fill="black")
+
+    # Save image
     pdf_path_without_extension = os.path.splitext(pdf_url)[0]
     png_path = pdf_path_without_extension + ".png"
     img.save(png_path, "PNG")
-
-    os.remove("temp.pdf")
 
     return png_path
 
