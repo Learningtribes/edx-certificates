@@ -832,7 +832,7 @@ class CertificateGen(object):
                 if page_text.strip():
                     img = Image.new("RGB", (int(page.mediaBox.getWidth()), int(page.mediaBox.getHeight())), "white")
                     img_draw = ImageDraw.Draw(img)
-                    img_draw.text((10, 10), page_text, fill=(0, 0, 0))
+                    img_draw.text((10, 10), page_text.encode('utf-8'), fill=(0, 0, 0))
 
                     img.save(png_path, "PNG")
         except Exception as e:
