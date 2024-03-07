@@ -801,14 +801,15 @@ class CertificateGen(object):
         outputStream.close()
 
         log.info("DEBUG v1: Starting Convertion...")
+        log.info("DEBUG: PNG file: %s" % filename)
 
         # Convert PDF into PNG
-        png_path = self._convert_pdf_to_png(filename)
-        log.info("DEBUG: png_path: %s" % png_path)
+        filename_png = self._convert_pdf_to_png(filename)
+        log.info("DEBUG: PDF file: %s" % filename_png)
 
         self._generate_verification_page(
             student_name,
-            png_path,
+            filename,
             verify_dir,
             verify_uuid,
             download_url
@@ -819,7 +820,7 @@ class CertificateGen(object):
         return (download_uuid, verify_uuid, download_url)
 
     def _convert_pdf_to_png(self, pdf_path):
-        png_path = os.path.splitext(pdf_path)[0] + ".png"
+        filename_png = os.path.splitext(pdf_path)[0] + ".png"
 
         # Open PDF
         try:
@@ -834,11 +835,11 @@ class CertificateGen(object):
                     img_draw = ImageDraw.Draw(img)
                     img_draw.text((10, 10), page_text.encode('utf-8'), fill=(0, 0, 0))
 
-                    img.save(png_path, "PNG")
+                    img.save(filename_png, "PNG")
         except Exception as e:
             log.info("DEBUG: Convert Error: %s" % e)
 
-        return png_path
+        return filename_png
 
     def _generate_v2_certificate(
         self,
@@ -1304,6 +1305,9 @@ class CertificateGen(object):
         self._ensure_dir(signature_filename)
         gpg = gnupg.GPG(homedir=settings.CERT_GPG_DIR)
         gpg.encoding = 'utf-8'
+
+        log.info("DEBUG: Im gonna open file: %s" % filename)
+
         with open(filename) as f:
             signed_data = gpg.sign(data=f, default_key=CERT_KEY_ID, clearsign=False, detach=True).data
         with open(signature_filename, 'w') as f:
