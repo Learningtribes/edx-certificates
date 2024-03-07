@@ -320,6 +320,7 @@ class CertificateGen(object):
         download_uuid = None
         verify_uuid = None
         download_url = None
+        download_url_png = None
         s3_conn = None
         bucket = None
         self.score = score
@@ -334,13 +335,15 @@ class CertificateGen(object):
         filename = "{0}_{1}_Certificate.pdf".format(username, self.course_id)
         filename = filename.replace(":", "-")
 
-        (download_uuid, verify_uuid, download_url) = self._generate_certificate(student_name=name,
+        (download_uuid, verify_uuid, download_url, download_url_png) = self._generate_certificate(student_name=name,
                                                                                 employee_id=employee_id,
                                                                                 download_dir=certificates_path,
                                                                                 verify_dir=verify_path,
                                                                                 grade=grade,
                                                                                 filename=filename,
                                                                                 designation=designation,)
+
+        log.info("The PNG file was created and recovered successfully: %s" % download_url_png)
 
         # upload generated certificate and verification files to S3,
         # or copy them to the web root. Or both.
@@ -396,7 +399,7 @@ class CertificateGen(object):
     ):
         """Generate a certificate PDF, signature and validation html files.
 
-        return (download_uuid, verify_uuid, download_url)
+        return (download_uuid, verify_uuid, download_url, download_url_png)
         """
         versionmap = {
             1: self._generate_v1_certificate,
@@ -804,8 +807,8 @@ class CertificateGen(object):
         log.info("DEBUG: PNG file: %s" % filename)
 
         # Convert PDF into PNG
-        filename_png = self._convert_pdf_to_png(filename)
-        log.info("DEBUG: PDF file: %s" % filename_png)
+        download_url_png = self._convert_pdf_to_png(filename)
+        log.info("DEBUG: PDF file: %s" % download_url_png)
 
         self._generate_verification_page(
             student_name,
@@ -817,7 +820,7 @@ class CertificateGen(object):
 
         log.info("DEBUG v1: download_uuid: %s", download_uuid)
 
-        return (download_uuid, verify_uuid, download_url)
+        return (download_uuid, verify_uuid, download_url, download_url_png)
 
     def _convert_pdf_to_png(self, pdf_path):
         filename_png = os.path.splitext(pdf_path)[0] + ".png"
