@@ -343,7 +343,8 @@ class CertificateGen(object):
                                                                                 filename=filename,
                                                                                 designation=designation,)
 
-        log.info("The PNG file was created and recovered successfully: %s" % download_url_png)
+        log.info("DEBUG: The PDF file was created and recovered successfully: %s" % download_url)
+        log.info("DEBUG: The PNG file was created and recovered successfully: %s" % download_url_png)
 
         # upload generated certificate and verification files to S3,
         # or copy them to the web root. Or both.
@@ -356,6 +357,8 @@ class CertificateGen(object):
             for subtree in (my_certs_path, my_verify_path):
                 for dirpath, dirnames, filenames in os.walk(subtree):
                     for filename in filenames:
+                        log.info("DEBUG: Lets upload the file: %s" % filename)
+
                         local_path = os.path.join(dirpath, filename)
                         dest_path = os.path.relpath(local_path, start=self.dir_prefix)
                         publish_dest = os.path.join(cert_web_root, dest_path)
