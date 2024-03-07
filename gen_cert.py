@@ -388,7 +388,7 @@ class CertificateGen(object):
                 if os.path.exists(working_dir):
                     shutil.rmtree(working_dir)
 
-        return (download_uuid, verify_uuid, download_url)
+        return (download_uuid, verify_uuid, download_url, download_url_png)
 
     def _generate_certificate(
         self,
