@@ -53,37 +53,6 @@ def parse_args(args=sys.argv[1:]):
     )
     return parser.parse_args()
 
-
-def pdf_to_png(pdf_url):
-    response = requests.get(pdf_url)
-    pdf_bytes = response.content
-    pdf_reader = PdfFileReader(BytesIO(pdf_bytes))
-
-    page = pdf_reader.getPage(0)
-    page_text = page.extractText()
-    log.info("DEBUG: page_text: %s" % page_text)
-
-    # Decoding text to Unicode
-    page_text_unicode = page_text.encode('utf-8')
-    log.info("DEBUG: page_text_unicode: %s" % page_text_unicode)
-
-    # Rendering text into an image
-    img = Image.new("RGB", (800, 600), "white")
-    draw = ImageDraw.Draw(img)
-    font = ImageFont.load_default()
-    draw.text((10, 10), page_text_unicode, font=font, fill="black")
-
-    # Save image
-    pdf_path_without_extension = os.path.splitext(pdf_url)[0]
-    log.info("DEBUG: pdf_path_without_extension: %s" % pdf_path_without_extension)
-    log.info("DEBUG: img: %s" % img)    
-
-    png_path = pdf_path_without_extension + ".png"
-    img.save(png_path, "PNG")
-
-    return png_path
-
-
 def main():
 
     manager = XQueuePullManager(settings.QUEUE_URL, settings.QUEUE_NAME,
@@ -218,7 +187,8 @@ def main():
                 )
                 (download_uuid,
                  verify_uuid,
-                 download_url) = cert.create_and_upload(name.encode('utf-8'),
+                 download_url,
+                 download_url_png) = cert.create_and_upload(name.encode('utf-8'),
                                                         username.encode('utf-8'),
                                                         employee_id,
                                                         grade=grade,
@@ -277,15 +247,6 @@ def main():
                 else:
                     continue
 
-            # now let's convert PDF into PNG file
-            #try:
-            #    png_path = pdf_to_png(download_url)
-            #except Exception as e:
-            #    log.info("DEBUG 3: Convertion Error: %s" % e)
-
-            log.info("DEBUG 4: download_url: %s" % download_url)
-            #log.info("DEBUG 5: png_path: %s" % png_path)
-
             # post result back to the LMS
             xqueue_reply = {
                 'xqueue_header': json.dumps(xqueue_header),
@@ -296,7 +257,7 @@ def main():
                     'username': username,
                     'course_id': course_id,
                     'url': download_url,
-                    #'png_path': png_path,
+                    'url_png': download_url_png,
                 }),
             }
             log.info("Posting result to the LMS: {0}".format(xqueue_reply))
