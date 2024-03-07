@@ -808,7 +808,7 @@ class CertificateGen(object):
 
         self._generate_verification_page(
             student_name,
-            filename,
+            png_path,
             verify_dir,
             verify_uuid,
             download_url
