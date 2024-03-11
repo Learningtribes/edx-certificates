@@ -826,28 +826,6 @@ class CertificateGen(object):
 
         return (download_uuid, verify_uuid, download_url, download_url_png)
 
-    def _convert_pdf_to_png(self, pdf_path):
-        filename_png = os.path.splitext(pdf_path)[0] + ".png"
-
-        # Open PDF
-        try:
-            with open(pdf_path, "rb") as pdf_file:
-                pdf_reader = PdfFileReader(pdf_file)
-                page = pdf_reader.getPage(0)
-
-                page_text = page.extractText()
-
-                if page_text.strip():
-                    img = Image.new("RGB", (int(page.mediaBox.getWidth()), int(page.mediaBox.getHeight())), "white")
-                    img_draw = ImageDraw.Draw(img)
-                    img_draw.text((10, 10), page_text.encode('utf-8'), fill=(0, 0, 0))
-
-                    img.save(filename_png, "PNG")
-        except Exception as e:
-            log.info("DEBUG: Convert Error: %s" % e)
-
-        return filename_png
-
     def _render_pdf_to_image_fitz(self, pdf_path):
         try:
             filename_png = os.path.splitext(pdf_path)[0] + ".png"
