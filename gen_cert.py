@@ -344,9 +344,6 @@ class CertificateGen(object):
                                                                                 filename=filename,
                                                                                 designation=designation,)
 
-        log.info("DEBUG: The PDF file was created and recovered successfully: %s" % download_url)
-        log.info("DEBUG: The PNG file was created and recovered successfully: %s" % download_url_png)
-
         # upload generated certificate and verification files to S3,
         # or copy them to the web root. Or both.
         my_certs_path = os.path.join(certificates_path, download_uuid)
@@ -358,8 +355,6 @@ class CertificateGen(object):
             for subtree in (my_certs_path, my_verify_path):
                 for dirpath, dirnames, filenames in os.walk(subtree):
                     for filename in filenames:
-                        log.info("DEBUG: Lets upload the file: %s" % filename)
-
                         local_path = os.path.join(dirpath, filename)
                         dest_path = os.path.relpath(local_path, start=self.dir_prefix)
                         publish_dest = os.path.join(cert_web_root, dest_path)
@@ -807,12 +802,8 @@ class CertificateGen(object):
         output.write(outputStream)
         outputStream.close()
 
-        log.info("DEBUG v1: Starting Convertion...")
-        log.info("DEBUG: PNG file: %s" % filename)
-
         # Convert PDF into PNG
         download_url_png = self._render_pdf_to_image_fitz(filename)
-        log.info("DEBUG: PDF file: %s" % download_url_png)
 
         self._generate_verification_page(
             student_name,
@@ -821,8 +812,6 @@ class CertificateGen(object):
             verify_uuid,
             download_url
         )
-
-        log.info("DEBUG v1: download_uuid: %s", download_uuid)
 
         return (download_uuid, verify_uuid, download_url, download_url_png)
 
@@ -1135,8 +1124,6 @@ class CertificateGen(object):
             download_url
         )
 
-        log.info("DEBUG 2: download_uuid: %s", download_uuid)
-
         return (download_uuid, verify_uuid, download_url)
 
     def _generate_mit_pe_certificate(
@@ -1304,8 +1291,6 @@ class CertificateGen(object):
         self._ensure_dir(signature_filename)
         gpg = gnupg.GPG(homedir=settings.CERT_GPG_DIR)
         gpg.encoding = 'utf-8'
-
-        log.info("DEBUG: Im gonna open file: %s" % filename)
 
         with open(filename) as f:
             signed_data = gpg.sign(data=f, default_key=CERT_KEY_ID, clearsign=False, detach=True).data
