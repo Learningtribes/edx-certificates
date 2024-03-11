@@ -12,6 +12,7 @@ import urllib
 import uuid
 import unicodedata
 import zipfile
+import fitz
 
 from reportlab.platypus import Paragraph
 from PyPDF2 import PdfFileWriter, PdfFileReader
@@ -810,7 +811,7 @@ class CertificateGen(object):
         log.info("DEBUG: PNG file: %s" % filename)
 
         # Convert PDF into PNG
-        download_url_png = self._convert_pdf_to_png(filename)
+        download_url_png = self._render_pdf_to_image_fitz(filename)
         log.info("DEBUG: PDF file: %s" % download_url_png)
 
         self._generate_verification_page(
@@ -842,6 +843,20 @@ class CertificateGen(object):
                     img_draw.text((10, 10), page_text.encode('utf-8'), fill=(0, 0, 0))
 
                     img.save(filename_png, "PNG")
+        except Exception as e:
+            log.info("DEBUG: Convert Error: %s" % e)
+
+        return filename_png
+
+    def _render_pdf_to_image_fitz(self, pdf_path):
+        try:
+            filename_png = os.path.splitext(pdf_path)[0] + ".png"
+            pdf_document = fitz.open(pdf_path)
+            first_page = pdf_document[0]
+            pix = first_page.getPixmap(alpha=False)
+
+            image = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+            image.save(filename_png)
         except Exception as e:
             log.info("DEBUG: Convert Error: %s" % e)
 
