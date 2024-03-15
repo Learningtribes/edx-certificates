@@ -802,8 +802,6 @@ class CertificateGen(object):
         output.write(outputStream)
         outputStream.close()
 
-        # Convert PDF into PNG
-        download_url_png = self._render_pdf_to_image_fitz(filename)
 
         self._generate_verification_page(
             student_name,
@@ -812,6 +810,12 @@ class CertificateGen(object):
             verify_uuid,
             download_url
         )
+
+        # Convert PDF into PNG
+        if self._render_pdf_to_image_fitz(filename) and download_url and download_url.strip():
+            download_url_png = download_url.replace('.pdf', '.png')
+        else:
+            download_url_png = None
 
         return (download_uuid, verify_uuid, download_url, download_url_png)
 
@@ -824,10 +828,10 @@ class CertificateGen(object):
 
             image = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
             image.save(filename_png)
+            return True
         except Exception as e:
             log.info("DEBUG: Convert Error: %s" % e)
-
-        return filename_png
+            return False
 
     def _generate_v2_certificate(
         self,
