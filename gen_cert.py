@@ -825,11 +825,11 @@ class CertificateGen(object):
             pdf_document = fitz.open(pdf_path)
             first_page = pdf_document[0]
 
-            zoom_x = 2.0  # horizontal zoom
-            zoom_y = 2.0  # vertical zoom
-            mat = fitz.Matrix(zoom_x, zoom_y)  # zoom factor 2 in each dimension
-            pix = first_page.get_pixmap(matrix=mat)
-            #pix = first_page.getPixmap(alpha=False)
+            # zoom_x = 2.0  # horizontal zoom
+            # zoom_y = 2.0  # vertical zoom
+            # mat = fitz.Matrix(zoom_x, zoom_y)  # zoom factor 2 in each dimension
+            # pix = first_page.get_pixmap(matrix=mat)
+            pix = first_page.getPixmap(alpha=False)
 
             ratio = output_resolution / 72.0
 
@@ -837,7 +837,7 @@ class CertificateGen(object):
             width = int(pix.width * ratio)
             height = int(pix.height * ratio)
             image = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
-            resized_image = image.resize((width, height), Image.ANTIALIAS)
+            resized_image = image.resize((width, height), Image.BICUBIC) # ANTIALIAS, BICUBIC, LANCZOS
             resized_image.save(filename_png, dpi=(output_resolution, output_resolution))
             return True
         except Exception as e:
