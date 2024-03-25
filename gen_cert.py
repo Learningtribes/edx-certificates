@@ -831,14 +831,15 @@ class CertificateGen(object):
             # pix = first_page.get_pixmap(matrix=mat)
             pix = first_page.getPixmap(alpha=False)
 
-            ratio = output_resolution / 72.0
+#            ratio = output_resolution / 72.0
 
             # resizing image
-            width = int(pix.width * ratio)
-            height = int(pix.height * ratio)
-            image = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
-            resized_image = image.resize((width, height), Image.BICUBIC) # ANTIALIAS, BICUBIC, LANCZOS
-            resized_image.save(filename_png, dpi=(output_resolution, output_resolution))
+#            width = int(pix.width * ratio)
+#            height = int(pix.height * ratio)
+#            image = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+#            resized_image = image.resize((width, height), Image.BICUBIC) # ANTIALIAS, BICUBIC, LANCZOS
+#            resized_image.save(filename_png, dpi=(output_resolution, output_resolution))
+            pix.save(filename_png)
             return True
         except Exception as e:
             log.info("DEBUG: Convert Error: %s" % e)
