@@ -819,15 +819,21 @@ class CertificateGen(object):
 
         return (download_uuid, verify_uuid, download_url, download_url_png)
 
-    def _render_pdf_to_image_fitz(self, pdf_path):
+    def _render_pdf_to_image_fitz(self, pdf_path, output_resolution=300):
         try:
             filename_png = os.path.splitext(pdf_path)[0] + ".png"
             pdf_document = fitz.open(pdf_path)
             first_page = pdf_document[0]
             pix = first_page.getPixmap(alpha=False)
 
+            ratio = output_resolution / 72.0
+
+            # resizing image
+            width = int(pix.width * ratio)
+            height = int(pix.height * ratio)
             image = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
-            image.save(filename_png)
+            resized_image = image.resize((width, height), Image.ANTIALIAS)
+            resized_image.save(filename_png, dpi=(output_resolution, output_resolution))
             return True
         except Exception as e:
             log.info("DEBUG: Convert Error: %s" % e)
