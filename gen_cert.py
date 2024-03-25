@@ -819,7 +819,7 @@ class CertificateGen(object):
 
         return (download_uuid, verify_uuid, download_url, download_url_png)
 
-    def _render_pdf_to_image_fitz(self, pdf_path, output_resolution=300):
+    def _render_pdf_to_image_fitz(self, pdf_path, output_resolution=150):
         try:
             filename_png = os.path.splitext(pdf_path)[0] + ".png"
             pdf_document = fitz.open(pdf_path)
