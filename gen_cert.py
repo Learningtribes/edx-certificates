@@ -825,8 +825,8 @@ class CertificateGen(object):
             pdf_document = fitz.open(pdf_path)
             first_page = pdf_document[0]
 
-            zoom_x = 3.0  # horizontal zoom
-            zoom_y = 3.0  # vertical zoom
+            zoom_x = 2.0  # horizontal zoom
+            zoom_y = 2.0  # vertical zoom
             mat = fitz.Matrix(zoom_x, zoom_y)
             pix = first_page.getPixmap(alpha=False, matrix=mat)
             ratio = output_resolution / 72.0
