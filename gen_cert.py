@@ -836,18 +836,24 @@ class CertificateGen(object):
             pdf_document = fitz.open(pdf_path)
             first_page = pdf_document[0]
 
-            zoom_x = 2.0  # horizontal zoom
-            zoom_y = 2.0  # vertical zoom
-            mat = fitz.Matrix(zoom_x, zoom_y)
-            pix = first_page.getPixmap(alpha=False, matrix=mat)
-            ratio = output_resolution / 72.0
+            # Calculate zoom based on desired output resolution
+            resolution_ratio = output_resolution / 72.0
+            mat = fitz.Matrix(resolution_ratio, resolution_ratio)
 
-            # resizing image
-            width = int(pix.width * ratio)
-            height = int(pix.height * ratio)
+            # Render page to image
+            pix = first_page.getPixmap(alpha=False, matrix=mat)
+
+            # Convert pixmap to PIL image
             image = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+
+            # Resize image to match output resolution
+            width = int(pix.width)
+            height = int(pix.height)
             resized_image = image.resize((width, height), Image.ANTIALIAS)
+
+            # Save image as PNG
             resized_image.save(filename_png, dpi=(output_resolution, output_resolution))
+
             return True
         except Exception as e:
             log.info("DEBUG: Convert Error: %s" % e)
