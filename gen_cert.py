@@ -821,6 +821,16 @@ class CertificateGen(object):
         return (download_uuid, verify_uuid, download_url, download_url_png)
 
     def _render_pdf_to_image_fitz(self, pdf_path, output_resolution=100):
+        """ 
+        Converts the first page of a PDF to a PNG image. 
+        
+        Args:
+            pdf_path (str): The path to the PDF file.
+            output_resolution (int): The desired resolution of the output image in DPI.
+            
+        Returns:
+            bool: True if the conversion is successful, False otherwise. 
+        """
         try:
             filename_png = os.path.splitext(pdf_path)[0] + ".png"
             pdf_document = fitz.open(pdf_path)
