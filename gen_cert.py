@@ -322,7 +322,7 @@ class CertificateGen(object):
         download_uuid = None
         verify_uuid = None
         download_url = None
-        download_url_png = None
+        png_url = None
         s3_conn = None
         bucket = None
         self.score = score
@@ -337,7 +337,7 @@ class CertificateGen(object):
         filename = "{0}_{1}_Certificate.pdf".format(username, self.course_id)
         filename = filename.replace(":", "-")
 
-        (download_uuid, verify_uuid, download_url, download_url_png) = self._generate_certificate(student_name=name,
+        (download_uuid, verify_uuid, download_url, png_url) = self._generate_certificate(student_name=name,
                                                                                 employee_id=employee_id,
                                                                                 download_dir=certificates_path,
                                                                                 verify_dir=verify_path,
@@ -385,7 +385,7 @@ class CertificateGen(object):
                 if os.path.exists(working_dir):
                     shutil.rmtree(working_dir)
 
-        return (download_uuid, verify_uuid, download_url, download_url_png)
+        return (download_uuid, verify_uuid, download_url, png_url)
 
     def _generate_certificate(
         self,
@@ -399,7 +399,7 @@ class CertificateGen(object):
     ):
         """Generate a certificate PDF, signature and validation html files.
 
-        return (download_uuid, verify_uuid, download_url, download_url_png)
+        return (download_uuid, verify_uuid, download_url, png_url)
         """
         versionmap = {
             1: self._generate_v1_certificate,
@@ -814,11 +814,11 @@ class CertificateGen(object):
 
         # Convert PDF into PNG
         if self._render_pdf_to_image_fitz(filename) and download_url and download_url.strip():
-            download_url_png = download_url.replace('.pdf', '.png')
+            png_url = download_url.replace('.pdf', '.png')
         else:
-            download_url_png = None
+            png_url = None
 
-        return (download_uuid, verify_uuid, download_url, download_url_png)
+        return (download_uuid, verify_uuid, download_url, png_url)
 
     def _render_pdf_to_image_fitz(self, pdf_path, output_resolution=100):
         """ 
