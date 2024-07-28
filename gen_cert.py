@@ -856,7 +856,7 @@ class CertificateGen(object):
 
             return True
         except Exception as e:
-            log.info("DEBUG: Convert Error: %s" % e)
+            log.error("Error converting PDF to image: %s", e)
             return False
 
     def _generate_v2_certificate(
