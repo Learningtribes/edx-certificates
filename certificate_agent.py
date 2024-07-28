@@ -12,13 +12,6 @@ from gen_cert import CertificateGen, CertificateExport
 logging.config.dictConfig(settings.LOGGING)
 log = logging.getLogger('certificates: ' + __name__)
 
-try:
-    import requests
-    from PyPDF2 import PdfFileReader
-    from PIL import Image, ImageDraw, ImageFont
-    from io import BytesIO
-except Exception as e:
-    log.info("DEBUG: Import Error: %s" % e)
 
 def parse_args(args=sys.argv[1:]):
     parser = ArgumentParser(description="""
