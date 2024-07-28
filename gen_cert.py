@@ -39,12 +39,13 @@ import boto.s3
 from boto.s3.key import Key
 from bidi.algorithm import get_display
 import arabic_reshaper
+from PIL import Image
 
 from opaque_keys.edx.keys import CourseKey
 
 reportlab.rl_config.warnOnMissingFontGlyphs = 0
 
-from PIL import Image, ImageDraw
+
 
 RE_ISODATES = re.compile("(?P<year>\d{4})-(?P<month>\d{2})-(?P<day>\d{2})")
 TEMPLATE_DIR = settings.TEMPLATE_DIR
