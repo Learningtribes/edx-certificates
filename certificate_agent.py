@@ -181,7 +181,7 @@ def main():
                 (download_uuid,
                  verify_uuid,
                  download_url,
-                 png_url) = cert.create_and_upload(name.encode('utf-8'),
+                 download_url_png) = cert.create_and_upload(name.encode('utf-8'),
                                                         username.encode('utf-8'),
                                                         employee_id,
                                                         grade=grade,
@@ -250,7 +250,7 @@ def main():
                     'username': username,
                     'course_id': course_id,
                     'url': download_url,
-                    'png_url': png_url,
+                    'url_png': download_url_png,
                 }),
             }
             log.info("Posting result to the LMS: {0}".format(xqueue_reply))
