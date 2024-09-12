@@ -12,6 +12,7 @@ import urllib
 import uuid
 import unicodedata
 import zipfile
+import fitz
 
 from reportlab.platypus import Paragraph
 from PyPDF2 import PdfFileWriter, PdfFileReader
@@ -38,10 +39,12 @@ import boto.s3
 from boto.s3.key import Key
 from bidi.algorithm import get_display
 import arabic_reshaper
+from PIL import Image
 
 from opaque_keys.edx.keys import CourseKey
 
 reportlab.rl_config.warnOnMissingFontGlyphs = 0
+
 
 
 RE_ISODATES = re.compile("(?P<year>\d{4})-(?P<month>\d{2})-(?P<day>\d{2})")
@@ -319,6 +322,7 @@ class CertificateGen(object):
         download_uuid = None
         verify_uuid = None
         download_url = None
+        png_url = None
         s3_conn = None
         bucket = None
         self.score = score
@@ -333,7 +337,7 @@ class CertificateGen(object):
         filename = "{0}_{1}_Certificate.pdf".format(username, self.course_id)
         filename = filename.replace(":", "-")
 
-        (download_uuid, verify_uuid, download_url) = self._generate_certificate(student_name=name,
+        (download_uuid, verify_uuid, download_url, png_url) = self._generate_certificate(student_name=name,
                                                                                 employee_id=employee_id,
                                                                                 download_dir=certificates_path,
                                                                                 verify_dir=verify_path,
@@ -381,7 +385,7 @@ class CertificateGen(object):
                 if os.path.exists(working_dir):
                     shutil.rmtree(working_dir)
 
-        return (download_uuid, verify_uuid, download_url)
+        return (download_uuid, verify_uuid, download_url, png_url)
 
     def _generate_certificate(
         self,
@@ -395,7 +399,7 @@ class CertificateGen(object):
     ):
         """Generate a certificate PDF, signature and validation html files.
 
-        return (download_uuid, verify_uuid, download_url)
+        return (download_uuid, verify_uuid, download_url, png_url)
         """
         versionmap = {
             1: self._generate_v1_certificate,
@@ -799,6 +803,7 @@ class CertificateGen(object):
         output.write(outputStream)
         outputStream.close()
 
+
         self._generate_verification_page(
             student_name,
             filename,
@@ -807,7 +812,52 @@ class CertificateGen(object):
             download_url
         )
 
-        return (download_uuid, verify_uuid, download_url)
+        # Convert PDF into PNG
+        if self._render_pdf_to_image_fitz(filename) and download_url and download_url.strip():
+            png_url = download_url.replace('.pdf', '.png')
+        else:
+            png_url = None
+
+        return (download_uuid, verify_uuid, download_url, png_url)
+
+    def _render_pdf_to_image_fitz(self, pdf_path, output_resolution=100):
+        """ 
+        Converts the first page of a PDF to a PNG image. 
+        
+        Args:
+            pdf_path (str): The path to the PDF file.
+            output_resolution (int): The desired resolution of the output image in DPI.
+            
+        Returns:
+            bool: True if the conversion is successful, False otherwise. 
+        """
+        try:
+            filename_png = os.path.splitext(pdf_path)[0] + ".png"
+            pdf_document = fitz.open(pdf_path)
+            first_page = pdf_document[0]
+
+            # Calculate zoom based on desired output resolution
+            resolution_ratio = output_resolution / 72.0
+            mat = fitz.Matrix(resolution_ratio, resolution_ratio)
+
+            # Render page to image
+            pix = first_page.getPixmap(alpha=False, matrix=mat)
+
+            # Convert pixmap to PIL image
+            image = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+
+            # Resize image to match output resolution
+            width = int(pix.width)
+            height = int(pix.height)
+            resized_image = image.resize((width, height), Image.ANTIALIAS)
+
+            # Save image as PNG
+            resized_image.save(filename_png, dpi=(output_resolution, output_resolution))
+
+            return True
+        except Exception as e:
+            log.error("Error converting PDF to image: %s", e)
+            return False
 
     def _generate_v2_certificate(
         self,
@@ -1271,6 +1321,7 @@ class CertificateGen(object):
         self._ensure_dir(signature_filename)
         gpg = gnupg.GPG(homedir=settings.CERT_GPG_DIR)
         gpg.encoding = 'utf-8'
+
         with open(filename) as f:
             signed_data = gpg.sign(data=f, default_key=CERT_KEY_ID, clearsign=False, detach=True).data
         with open(signature_filename, 'w') as f:

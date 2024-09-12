@@ -8,6 +8,7 @@ import settings
 from openedx_certificates.queue_xqueue import XQueuePullManager
 from gen_cert import CertificateGen, CertificateExport
 
+
 logging.config.dictConfig(settings.LOGGING)
 log = logging.getLogger('certificates: ' + __name__)
 
@@ -44,7 +45,6 @@ def parse_args(args=sys.argv[1:]):
         help='AWS KEY for write access to the S3 bucket',
     )
     return parser.parse_args()
-
 
 def main():
 
@@ -180,7 +180,8 @@ def main():
                 )
                 (download_uuid,
                  verify_uuid,
-                 download_url) = cert.create_and_upload(name.encode('utf-8'),
+                 download_url,
+                 png_url) = cert.create_and_upload(name.encode('utf-8'),
                                                         username.encode('utf-8'),
                                                         employee_id,
                                                         grade=grade,
@@ -249,6 +250,7 @@ def main():
                     'username': username,
                     'course_id': course_id,
                     'url': download_url,
+                    'png_url': png_url,
                 }),
             }
             log.info("Posting result to the LMS: {0}".format(xqueue_reply))
