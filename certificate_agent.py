@@ -129,6 +129,8 @@ def main():
 
         else:
             try:
+                # We fetch this extra parameter to differentiate example certificates from learner certificates.
+                is_example_certificate = xqueue_body.get('example_certificate', False)
                 username = xqueue_body['username']
                 employee_id = xqueue_body['employee_id']
                 course_name = xqueue_body['course_name']
@@ -152,7 +154,8 @@ def main():
                         aws_id=args.aws_id,
                         aws_key=args.aws_key,
                         long_course=course_name.encode('utf-8'),
-                        pdf_info=pdf_info
+                        pdf_info=pdf_info,
+                        is_example_certificate=is_example_certificate
                     )
                     last_course = course_id
                 if action in ['remove', 'regen']:

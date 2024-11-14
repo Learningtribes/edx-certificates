@@ -190,8 +190,10 @@ def autoscale_text(page, string, max_fontsize, max_leading, max_height, max_widt
 class CertificateGen(object):
     """Manages the pdf, signatures, and S3 bucket for course certificates."""
 
-    def __init__(self, course_id, template_pdf=None, aws_id=None, aws_key=None, dir_prefix=None,
-                 long_org=None, long_course=None, pdf_info=None):
+    def __init__(
+            self, course_id, template_pdf=None, aws_id=None, aws_key=None, dir_prefix=None,
+            long_org=None, long_course=None, pdf_info=None, is_example_certificate=False
+    ):
         """Load a pdf template and initialize
 
         Multiple certificates can be generated and uploaded for a single course.
@@ -230,6 +232,7 @@ class CertificateGen(object):
         self.score = 0
         self.duration = None
         self.completion = None
+        self._is_example_certificate = is_example_certificate
 
         def interstitial_factory():
             """ Generate default values for interstitial_texts defaultdict """
@@ -812,8 +815,8 @@ class CertificateGen(object):
             download_url
         )
 
-        # Convert PDF into PNG
-        if self._render_pdf_to_image_fitz(filename) and download_url and download_url.strip():
+        # Convert PDF into PNG for Example Certificates Only ! ( `_is_example_certificate` = True )
+        if self._is_example_certificate == True and self._render_pdf_to_image_fitz(filename) and download_url and download_url.strip():
             png_url = download_url.replace('.pdf', '.png')
         else:
             png_url = None
