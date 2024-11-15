@@ -119,9 +119,12 @@ class S3LearnerCertPNGCleaner(_CleanerInterface):
         pdf_number = 0
         unrecognized_number = 0
         removed_number = 0
-        marker = None  # Used for pagination
+        batch_count = 0
+        marker = None       # Used for pagination
 
         while True:
+            is_printed = False
+            batch_count += 1
             # List all files with the specified prefix
             results = self._bucket.list(prefix=self.CERT_FILE_PREFIX, marker=marker)
 
@@ -133,10 +136,12 @@ class S3LearnerCertPNGCleaner(_CleanerInterface):
 
                     if _is_leaner_certificate == None:
                         unrecognized_number += 1
-                        print('[ERROR] Got an Unrecognized URI : {}'.format(_png_resource_uri))
+                        is_printed = True
+                        print('[ERROR] Got an Unrecognized URI : {}'.format(_png_resource_uri.encode('utf-8')))
 
                     elif _is_leaner_certificate:
-                        print('[INFO] DELETING Learner Certificate PNG: {} '.format(_png_resource_uri))
+                        is_printed = True
+                        print('[INFO] DELETING Learner Certificate PNG: {} '.format(_png_resource_uri.encode('utf-8')))
                         if self._dryrun == False:
                             self._bucket.delete_key(_png_resource_uri)       # Delete the file
                             removed_number += 1
@@ -145,6 +150,8 @@ class S3LearnerCertPNGCleaner(_CleanerInterface):
 
                 marker = _png_resource_uri
 
+            if not is_printed:
+                print('[INFO] Batch No. ---> {}'.format(batch_count))
             # If there are no more results, stop
             if not results:
                 break
