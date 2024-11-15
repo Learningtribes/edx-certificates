@@ -79,10 +79,10 @@ class S3LearnerCertPNGCleaner(object):
             count = 0
             # List all files with the specified prefix
             _cert_png_files = (key.name for key in self._bucket.list(prefix=self.CERT_FILE_PREFIX, marker=marker) if key.name.endswith(self.CERT_FILE_SUFFIX))
-            for _png_resource in _cert_png_files:
-                print('[INFO] DELETING {} '.format(key.name))
+            for _png_resource_uri in _cert_png_files:
+                print('[INFO] DELETING {} '.format(_png_resource_uri))
                 if self._dryrun == False:
-                    self._bucket.delete_key(key.name)       # Delete the file
+                    self._bucket.delete_key(_png_resource_uri)       # Delete the file
                 count += 1
 
             # If there are no more results, stop
