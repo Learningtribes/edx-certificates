@@ -78,17 +78,13 @@ class S3LearnerCertPNGCleaner(object):
 if __name__ == '__main__':
     try:
         parser = ArgumentParser(description=r'A resource ( DFS / S3 ) cleaner.')
-        parser.add_argument(
-            '--target_type', default='dfs', help='Options => dfs / s3'
-        )
-        parser.add_argument(
-            '--dryrun', default=True, help='Options => dfs / s3'
-        )
+        parser.add_argument('--target_type', default='dfs', help='Options => dfs / s3')
+        parser.add_argument('--dryrun', type=bool, default=True, help='Options => dfs / s3')
         args = parser.parse_args()
         if args.target_type not in ('dfs', 's3'):
             raise Exception('[Error] Invalid target type: {}'.format(args.target_type))
 
-        _cleaner = DFSCleaner(parser.dryrun) if args.target_type == 'dfs' else S3LearnerCertPNGCleaner(parser.dryrun)
+        _cleaner = DFSCleaner(args.dryrun) if args.target_type == 'dfs' else S3LearnerCertPNGCleaner(args.dryrun)
         _cleaner.run()
 
         print(r'Done !')
