@@ -74,15 +74,6 @@ class DFSCleaner(_CleanerInterface):
 
 class S3LearnerCertPNGCleaner(_CleanerInterface):
     """Delete PNG files associated with `Learner certificates` on S3
-
-        Usage:
-            (certs) certs@learning-tribes:~$ /edx/app/certs/venvs/certs/bin/python /edx/app/certs/certificates/cleaner.py --target_type=s3 --dryrun=True
-            [INFO] Dryrun Mode=True | cleaning AWS/S3 files, Bucket Name=lt-learning-customer2-default
-            [INFO] DELETING downloads/11750cb6360f4819a2ed57bb598c234e/ddd98d0e5370479fbd7b09764acda466_course-v1-edX+1234567+2022-11-03_Certificate.png
-            [INFO] DELETING downloads/16e3ff53f3ba41fcb1553e1f93a724e7/bd2191ba4b104b4bb972f1d74d53b2e6_course-v1-edX+1234567+2022-11-03_Certificate.png
-            [INFO] DELETING downloads/178023e98ee9441b87b82d53a7f168f1/8ecdda0959cb4a36b0a6c131d277b012_course-v1-edX+1234567+2022-11-03_Certificate.png
-            ......
-            Done !
     """
     BUCKET = settings.CERT_BUCKET
     CERT_FILE_PREFIX = 'downloads/'
@@ -116,9 +107,9 @@ class S3LearnerCertPNGCleaner(_CleanerInterface):
         return None
 
     def delete_png_once(self):
-        pdf_number = 0
+        example_cert_number = 0
         unrecognized_number = 0
-        removed_number = 0
+        removed_learner_png_number = 0
         batch_count = 0
         marker = None       # Used for pagination
 
@@ -146,9 +137,9 @@ class S3LearnerCertPNGCleaner(_CleanerInterface):
                         print('[INFO] DELETING Learner Certificate PNG: {} '.format(_png_resource_uri.encode('utf-8')))
                         if self._dryrun == False:
                             self._bucket.delete_key(_png_resource_uri)       # Delete the file
-                            removed_number += 1
+                            removed_learner_png_number += 1
                     else:
-                        pdf_number += 1
+                        example_cert_number += 1
 
             # If no keys were processed, we're done
             if not _last_key_name:
@@ -159,7 +150,11 @@ class S3LearnerCertPNGCleaner(_CleanerInterface):
             if not is_printed:
                 print('[INFO] Batch No. ---> {}, marker flag ---> {}'.format(batch_count, marker.encode('utf-8')))
 
-        print('[INFO] PDF Number = {}, Unrecognized URI Number = {}, Removed Number = {}'.format(pdf_number, unrecognized_number, removed_number))
+        print(
+            '[INFO] Example Certificate Number = {}, Unrecognized URI Number = {}, Removed Learner Certificate PNG Number = {}'.format(
+                example_cert_number, unrecognized_number, removed_learner_png_number
+            )
+        )
 
     def run(self):
         self.delete_png_once()
