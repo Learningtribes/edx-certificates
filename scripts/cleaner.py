@@ -13,9 +13,15 @@ import shutil
 from sys import exit as process_terminate
 from traceback import format_exc
 
+import boto.s3
+from boto.s3.key import Key
+
+import settings
+
 
 class DFSCleaner(object):
-    """Clean unwanted files in DFS. And we can specify date range in the process.
+    """Clean unwanted files in DFS ( folders: /downloads + /cert ).
+        And we can specify the `End Date` of date range in the process.
     """
     TARGET_ROOT_FOLDERS = [                 # Target folders where we want to clean
         '/edx/var/certs/www-data/downloads',
@@ -29,7 +35,7 @@ class DFSCleaner(object):
             months=input('Please enter Month number of files which you wanna to remain: ')
         )
         self._dryrun = dryrun
-        print('[INFO] Dryrun Mode={} | cleaning files from {} to {})'.format(dryrun, self.PERIOD_START_DATE, self.PERIOD_END_DATE))
+        print('[INFO] Dryrun Mode={} | cleaning DFS files from {} to {}'.format(dryrun, self.PERIOD_START_DATE, self.PERIOD_END_DATE))
 
     def delete_resources_in_range(self, root_folder):
         for _folder_name in os.listdir(root_folder):
@@ -48,13 +54,25 @@ class DFSCleaner(object):
             self.delete_resources_in_range(_root_folder)
 
 
-class S3Cleaner(object):
+class S3LearnerCertPNGCleaner(object):
+    """Delete PNG files associated with `Learner certificates` on S3
+    """
+    BUCKET = settings.CERT_BUCKET
+    CERT_FILE_PREFIX = 'downloads/'
+    CERT_FILE_SUFFIX = '.png'
+    FILE_USERNAME_SEPARATOR = '_course-v1'
+
     def __init__(self, dryrun=True):
-        print('[INFO] S3Cleaner(dryrun={})'.format(dryrun))
+        print('[INFO] Dryrun Mode={} | cleaning AWS/S3 files'.format(dryrun))
         self._dryrun = dryrun
+        self._s3_conn = boto.connect_s3(settings.CERT_AWS_ID, settings.CERT_AWS_KEY)
+        self._bucket = s3_conn.get_bucket(BUCKET)
 
     def run(self):
-        pass
+        # List all files with the specified prefix
+        _cert_files = (key.name for key in self._bucket.list(prefix=self.CERT_FILE_PREFIX) if key.name.endswith(self.CERT_FILE_SUFFIX))
+        for _cert_file in _cert_files:
+            print(_cert_file)
 
 
 if __name__ == '__main__':
@@ -70,7 +88,7 @@ if __name__ == '__main__':
         if args.target_type not in ('dfs', 's3'):
             raise Exception('[Error] Invalid target type: {}'.format(args.target_type))
 
-        _cleaner = DFSCleaner(parser.dryrun) if args.target_type == 'dfs' else S3Cleaner(parser.dryrun)
+        _cleaner = DFSCleaner(parser.dryrun) if args.target_type == 'dfs' else S3LearnerCertPNGCleaner(parser.dryrun)
         _cleaner.run()
 
         print(r'Done !')
