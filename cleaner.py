@@ -82,7 +82,7 @@ if __name__ == '__main__':
             '--target_type', default='dfs', help='Options => dfs / s3'
         )
         parser.add_argument(
-            '--dryrun', type=bool, default=True, help='Options => dfs / s3'
+            '--dryrun', default=True, help='Options => dfs / s3'
         )
         args = parser.parse_args()
         if args.target_type not in ('dfs', 's3'):
