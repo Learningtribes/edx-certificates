@@ -4,9 +4,11 @@
     Usage:
         (certs) certs@learning-tribes:~$ pwd
         /edx/app/certs
-        (certs) certs@learning-tribes:~$ /edx/app/certs/venvs/certs/bin/python /edx/app/certs/certificates/cleaner.py --target_type=s3 --dryrun=True
+        (certs) certs@learning-tribes:~$ source /edx/app/certs/venvs/certs/bin/activate
+        (certs) certs@learning-tribes:~$ /edx/app/certs/venvs/certs/bin/python /edx/app/certs/certificates/cleaner.py --target_type=[s3|dfs] --dryrun=[true|false]
         [INFO] Dryrun Mode=True | cleaning AWS/S3 files, Bucket Name=lt-learning-customer2-default
         Done !
+
 """
 from argparse import ArgumentParser
 from datetime import datetime
@@ -71,25 +73,37 @@ class S3LearnerCertPNGCleaner(object):
         self._s3_conn = boto.connect_s3(settings.CERT_AWS_ID, settings.CERT_AWS_KEY)
         self._bucket = self._s3_conn.get_bucket(self.BUCKET)
 
-    def run(self):
+    def delete_png_once(self):
+        count = 0
         # List all files with the specified prefix
-        _cert_files = (key.name for key in self._bucket.list(prefix=self.CERT_FILE_PREFIX) if key.name.endswith(self.CERT_FILE_SUFFIX))
-        for _cert_file in _cert_files:
-            print(_cert_file)
+        _cert_png_files = (key.name for key in self._bucket.list(prefix=self.CERT_FILE_PREFIX) if key.name.endswith(self.CERT_FILE_SUFFIX))
+        for _png_resource in _cert_png_files:
+            count += 1
+
+        print('[INFO] Affect number = {}'.format(count))
+
+        return True if count > 0 else False
+
+    def run(self):
+        while True:
+            is_affected = self.delete_png_once()
+            if not is_affected:
+                break
 
 
 if __name__ == '__main__':
     try:
-        def _str2bool(value):
+        def _argsStr2Bool(value):
             return True if value.lower() in ('yes', 'true', 't', '1') else False
 
         parser = ArgumentParser(description=r'A resource ( DFS / S3 ) cleaner.')
         parser.add_argument('--target_type', default='EmptyType', help='Options => dfs / s3')
-        parser.add_argument('--dryrun', type=_str2bool, default=True, help='Options => dfs / s3', required=True)
+        parser.add_argument('--dryrun', type=_argsStr2Bool, default=True, help='Options => dfs / s3')
         args = parser.parse_args()
         if args.target_type not in ('dfs', 's3'):
             raise Exception('[Error] Invalid target type: {}'.format(args.target_type))
 
+        ########### Start to run cleaning task ###########
         _cleaner = DFSCleaner(args.dryrun) if args.target_type == 'dfs' else S3LearnerCertPNGCleaner(args.dryrun)
         _cleaner.run()
 
