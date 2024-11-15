@@ -2,8 +2,11 @@
     Remove unwanted files from Disk or S3 by arguments.
 
     Usage:
-        python cleaner.py --target_type=s3/dfs --dryrun=True/False
-
+        (certs) certs@learning-tribes:~$ pwd
+        /edx/app/certs
+        (certs) certs@learning-tribes:~$ /edx/app/certs/venvs/certs/bin/python /edx/app/certs/certificates/cleaner.py --target_type=s3 --dryrun=True
+        [INFO] Dryrun Mode=True | cleaning AWS/S3 files, Bucket Name=lt-learning-customer2-default
+        Done !
 """
 from argparse import ArgumentParser
 from datetime import datetime
@@ -77,9 +80,12 @@ class S3LearnerCertPNGCleaner(object):
 
 if __name__ == '__main__':
     try:
+        def _str2bool(value):
+            return True if value.lower() in ('yes', 'true', 't', '1') else False
+
         parser = ArgumentParser(description=r'A resource ( DFS / S3 ) cleaner.')
         parser.add_argument('--target_type', default='EmptyType', help='Options => dfs / s3')
-        parser.add_argument('--dryrun', type=bool, default=True, help='Options => dfs / s3')
+        parser.add_argument('--dryrun', type=_str2bool, default=True, help='Options => dfs / s3', required=True)
         args = parser.parse_args()
         if args.target_type not in ('dfs', 's3'):
             raise Exception('[Error] Invalid target type: {}'.format(args.target_type))
