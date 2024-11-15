@@ -109,8 +109,8 @@ class S3LearnerCertPNGCleaner(_CleanerInterface):
 
 if __name__ == '__main__':
     try:
-        def _argsStr2Bool(value):
-            return True if value.lower() in ('yes', 'true', 't', '1') else False
+        def _argsStr2Bool(arg_str):
+            return True if arg_str.lower() in ('yes', 'true', 't', '1') else False
 
         parser = ArgumentParser(description=r'A resource ( DFS / S3 ) cleaner.')
         parser.add_argument('--target_type', default='EmptyType', help='Options => dfs / s3')
