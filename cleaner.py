@@ -37,7 +37,7 @@ class DFSCleaner(object):
 
     def __init__(self, dryrun=True):
         self.PERIOD_END_DATE = datetime.now() - relativedelta(
-            months=input('Please enter Month number of files which you wanna to remain: ')
+            months=int(input('Please enter Month number of files which you wanna to remain: '))
         )
         self._dryrun = dryrun
         print('[INFO] Dryrun Mode={} | cleaning DFS files from {} to {}'.format(dryrun, self.PERIOD_START_DATE, self.PERIOD_END_DATE))
@@ -74,21 +74,24 @@ class S3LearnerCertPNGCleaner(object):
         self._bucket = self._s3_conn.get_bucket(self.BUCKET)
 
     def delete_png_once(self):
-        count = 0
-        # List all files with the specified prefix
-        _cert_png_files = (key.name for key in self._bucket.list(prefix=self.CERT_FILE_PREFIX) if key.name.endswith(self.CERT_FILE_SUFFIX))
-        for _png_resource in _cert_png_files:
-            count += 1
+        marker = None  # Used for pagination
 
-        print('[INFO] Affect number = {}'.format(count))
+        while True:
+            count = 0
+            # List all files with the specified prefix
+            _cert_png_files = (key.name for key in self._bucket.list(prefix=self.CERT_FILE_PREFIX, marker=marker) if key.name.endswith(self.CERT_FILE_SUFFIX))
+            for _png_resource in _cert_png_files:
+                print('[INFO] DELETING {} '.format(key.name))
+                if self._dryrun == False:
+                    self._bucket.delete_key(key.name)       # Delete the file
+                count += 1
 
-        return True if count > 0 else False
+            # If there are no more results, stop
+            if not count:
+                break
 
     def run(self):
-        while True:
-            is_affected = self.delete_png_once()
-            if not is_affected:
-                break
+        self.delete_png_once()
 
 
 if __name__ == '__main__':
