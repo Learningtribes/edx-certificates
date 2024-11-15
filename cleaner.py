@@ -49,9 +49,8 @@ class DFSCleaner(object):
                 _mod_time = datetime.fromtimestamp(os.path.getmtime(_resource_folder))
                 if self.PERIOD_START_DATE < _mod_time < self.PERIOD_END_DATE:
                     print('[INFO] DELETING {} (Modified: {})'.format(_resource_folder, _mod_time))
-                    if self._dryrun == True:
-                        return
-                    shutil.rmtree(_resource_folder)  # Delete folder and its contents
+                    if self._dryrun == False:
+                        shutil.rmtree(_resource_folder)  # Delete folder and its contents
 
     def run(self):
         for _root_folder in self.TARGET_ROOT_FOLDERS:
