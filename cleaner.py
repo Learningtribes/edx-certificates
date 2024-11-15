@@ -18,6 +18,7 @@ import os
 import shutil
 from sys import exit as process_terminate
 from traceback import format_exc
+import uuid
 
 import boto.s3
 from boto.s3.key import Key
@@ -73,6 +74,15 @@ class DFSCleaner(_CleanerInterface):
 
 class S3LearnerCertPNGCleaner(_CleanerInterface):
     """Delete PNG files associated with `Learner certificates` on S3
+
+        Usage:
+            (certs) certs@learning-tribes:~$ /edx/app/certs/venvs/certs/bin/python /edx/app/certs/certificates/cleaner.py --target_type=s3 --dryrun=True
+            [INFO] Dryrun Mode=True | cleaning AWS/S3 files, Bucket Name=lt-learning-customer2-default
+            [INFO] DELETING downloads/11750cb6360f4819a2ed57bb598c234e/ddd98d0e5370479fbd7b09764acda466_course-v1-edX+1234567+2022-11-03_Certificate.png
+            [INFO] DELETING downloads/16e3ff53f3ba41fcb1553e1f93a724e7/bd2191ba4b104b4bb972f1d74d53b2e6_course-v1-edX+1234567+2022-11-03_Certificate.png
+            [INFO] DELETING downloads/178023e98ee9441b87b82d53a7f168f1/8ecdda0959cb4a36b0a6c131d277b012_course-v1-edX+1234567+2022-11-03_Certificate.png
+            ......
+            Done !
     """
     BUCKET = settings.CERT_BUCKET
     CERT_FILE_PREFIX = 'downloads/'
@@ -85,6 +95,26 @@ class S3LearnerCertPNGCleaner(_CleanerInterface):
         self._s3_conn = boto.connect_s3(settings.CERT_AWS_ID, settings.CERT_AWS_KEY)
         self._bucket = self._s3_conn.get_bucket(self.BUCKET)
 
+    @classmethod
+    def is_leaner_certificate(cls, s3_uri):
+        """Return `True`: Learner Certificate
+            `False`: Example Certificate
+            `None`: Unrecognized
+        """
+        _sectors = s3_uri.split(cls.FILE_USERNAME_SEPARATOR)
+        if len(_sectors) < 2:
+            return None
+
+        _username_or_uuid = _sectors[0].split('/')[-1]
+        if _username_or_uuid:
+            try:
+                uuid.UUID(_username_or_uuid)
+                return False        # (UUID): Example Certificate
+            except ValueError:
+                return True         # (Username): It's a Learner Certificate if ValueError raised here.
+
+        return None
+
     def delete_png_once(self):
         marker = None  # Used for pagination
 
@@ -93,9 +123,16 @@ class S3LearnerCertPNGCleaner(_CleanerInterface):
             # List all files with the specified prefix
             _cert_png_files = (key.name for key in self._bucket.list(prefix=self.CERT_FILE_PREFIX, marker=marker) if key.name.endswith(self.CERT_FILE_SUFFIX))
             for _png_resource_uri in _cert_png_files:
-                print('[INFO] DELETING {} '.format(_png_resource_uri))
-                if self._dryrun == False:
-                    self._bucket.delete_key(_png_resource_uri)       # Delete the file
+                _is_leaner_certificate = self.is_leaner_certificate(_png_resource_uri)
+
+                if _is_leaner_certificate == None:
+                    print('[ERROR] Got an Unrecognized URI : {}'.format(_png_resource_uri))
+
+                elif _is_leaner_certificate:
+                    print('[INFO] DELETING {} '.format(_png_resource_uri))
+                    if self._dryrun == False:
+                        self._bucket.delete_key(_png_resource_uri)       # Delete the file
+
                 marker = _png_resource_uri
                 count += 1
 
