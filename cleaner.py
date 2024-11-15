@@ -127,9 +127,11 @@ class S3LearnerCertPNGCleaner(_CleanerInterface):
             batch_count += 1
             # List all files with the specified prefix
             results = self._bucket.list(prefix=self.CERT_FILE_PREFIX, marker=marker)
+            _last_key_name = None       # Track the last key name in the current batch
 
             for key in results:
                 _png_resource_uri = key.name
+                _last_key_name = key.name
 
                 if _png_resource_uri.endswith(self.CERT_FILE_SUFFIX):   # Only take .png files
                     _is_leaner_certificate = self.is_leaner_certificate(_png_resource_uri)
@@ -148,13 +150,14 @@ class S3LearnerCertPNGCleaner(_CleanerInterface):
                     else:
                         pdf_number += 1
 
-                marker = _png_resource_uri
+            # If no keys were processed, we're done
+            if not _last_key_name:
+                break
+            # Update the marker to the last key name
+            marker = _last_key_name
 
             if not is_printed:
-                print('[INFO] Batch No. ---> {}'.format(batch_count))
-            # If there are no more results, stop
-            if not results:
-                break
+                print('[INFO] Batch No. ---> {}, marker flag ---> {}'.format(batch_count, marker.encode('utf-8')))
 
         print('[INFO] PDF Number = {}, Unrecognized URI Number = {}, Removed Number = {}'.format(pdf_number, unrecognized_number, removed_number))
 
