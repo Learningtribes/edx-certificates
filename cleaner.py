@@ -116,29 +116,40 @@ class S3LearnerCertPNGCleaner(_CleanerInterface):
         return None
 
     def delete_png_once(self):
+        pdf_number = 0
+        unrecognized_number = 0
+        removed_number = 0
         marker = None  # Used for pagination
 
         while True:
-            count = 0
             # List all files with the specified prefix
-            _cert_png_files = (key.name for key in self._bucket.list(prefix=self.CERT_FILE_PREFIX, marker=marker) if key.name.endswith(self.CERT_FILE_SUFFIX))
-            for _png_resource_uri in _cert_png_files:
-                _is_leaner_certificate = self.is_leaner_certificate(_png_resource_uri)
+            results = self._bucket.list(prefix=self.CERT_FILE_PREFIX, marker=marker)
 
-                if _is_leaner_certificate == None:
-                    print('[ERROR] Got an Unrecognized URI : {}'.format(_png_resource_uri))
+            for key in results:
+                _png_resource_uri = key.name
 
-                elif _is_leaner_certificate:
-                    print('[INFO] DELETING Learner Certificate PNG: {} '.format(_png_resource_uri))
-                    if self._dryrun == False:
-                        self._bucket.delete_key(_png_resource_uri)       # Delete the file
+                if _png_resource_uri.endswith(self.CERT_FILE_SUFFIX):   # Only take .png files
+                    _is_leaner_certificate = self.is_leaner_certificate(_png_resource_uri)
+
+                    if _is_leaner_certificate == None:
+                        unrecognized_number += 1
+                        print('[ERROR] Got an Unrecognized URI : {}'.format(_png_resource_uri))
+
+                    elif _is_leaner_certificate:
+                        print('[INFO] DELETING Learner Certificate PNG: {} '.format(_png_resource_uri))
+                        if self._dryrun == False:
+                            self._bucket.delete_key(_png_resource_uri)       # Delete the file
+                            removed_number += 1
+                    else:
+                        pdf_number += 1
 
                 marker = _png_resource_uri
-                count += 1
 
             # If there are no more results, stop
-            if not count:
+            if not results:
                 break
+
+        print('[INFO] PDF Number = {}, Unrecognized URI Number = {}, Removed Number = {}'.format(pdf_number, unrecognized_number, removed_number))
 
     def run(self):
         self.delete_png_once()
