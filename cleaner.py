@@ -66,7 +66,7 @@ class S3LearnerCertPNGCleaner(object):
         print('[INFO] Dryrun Mode={} | cleaning AWS/S3 files'.format(dryrun))
         self._dryrun = dryrun
         self._s3_conn = boto.connect_s3(settings.CERT_AWS_ID, settings.CERT_AWS_KEY)
-        self._bucket = s3_conn.get_bucket(BUCKET)
+        self._bucket = self._s3_conn.get_bucket(BUCKET)
 
     def run(self):
         # List all files with the specified prefix
@@ -78,7 +78,7 @@ class S3LearnerCertPNGCleaner(object):
 if __name__ == '__main__':
     try:
         parser = ArgumentParser(description=r'A resource ( DFS / S3 ) cleaner.')
-        parser.add_argument('--target_type', default='dfs', help='Options => dfs / s3')
+        parser.add_argument('--target_type', default='EmptyType', help='Options => dfs / s3')
         parser.add_argument('--dryrun', type=bool, default=True, help='Options => dfs / s3')
         args = parser.parse_args()
         if args.target_type not in ('dfs', 's3'):
