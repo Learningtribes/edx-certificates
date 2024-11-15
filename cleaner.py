@@ -10,6 +10,7 @@
         Done !
 
 """
+from abc import ABCMeta, abstractmethod
 from argparse import ArgumentParser
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
@@ -24,7 +25,19 @@ from boto.s3.key import Key
 import settings
 
 
-class DFSCleaner(object):
+class _CleanerInterface(object):
+    """Regulate all subclass of cleaner
+    """
+    __metaclass__ = ABCMeta
+
+    @abstractmethod
+    def run(self):
+        """Execute cleaning task
+        """
+        raise NotImplementedError
+
+
+class DFSCleaner(_CleanerInterface):
     """Clean unwanted files in DFS ( folders: /downloads + /cert ).
         And we can specify the `End Date` of date range in the process.
     """
@@ -58,7 +71,7 @@ class DFSCleaner(object):
             self.delete_resources_in_range(_root_folder)
 
 
-class S3LearnerCertPNGCleaner(object):
+class S3LearnerCertPNGCleaner(_CleanerInterface):
     """Delete PNG files associated with `Learner certificates` on S3
     """
     BUCKET = settings.CERT_BUCKET
