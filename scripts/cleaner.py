@@ -1,5 +1,9 @@
 """
-    Remove unwanted files from Disk or S3 by arguments
+    Remove unwanted files from Disk or S3 by arguments.
+
+    Usage:
+        python cleaner.py --target_type=s3/dfs --dryrun=True/False
+
 """
 from argparse import ArgumentParser
 from datetime import datetime
@@ -11,13 +15,19 @@ from traceback import format_exc
 
 
 class DFSCleaner(object):
-    TARGET_ROOT_FOLDERS = ['/edx/var/certs/www-data/downloads', '/edx/var/certs/www-data/cert']
+    """Clean unwanted files in DFS. And we can specify date range in the process.
+    """
+    TARGET_ROOT_FOLDERS = [                 # Target folders where we want to clean
+        '/edx/var/certs/www-data/downloads',
+        '/edx/var/certs/www-data/cert'
+    ]
     PERIOD_START_DATE = datetime(2020, 1, 1)
     PERIOD_END_DATE = None
 
     def __init__(self, dryrun=True):
-        _month_number = input('Please enter Month number of files which you wanna to remain: ')
-        self.PERIOD_END_DATE = datetime.now() - relativedelta(months=_month_number)
+        self.PERIOD_END_DATE = datetime.now() - relativedelta(
+            months=input('Please enter Month number of files which you wanna to remain: ')
+        )
         self._dryrun = dryrun
         print('[INFO] Dryrun Mode={} | cleaning files from {} to {})'.format(dryrun, self.PERIOD_START_DATE, self.PERIOD_END_DATE))
 
@@ -27,13 +37,14 @@ class DFSCleaner(object):
             if os.path.isdir(_resource_folder):
                 _mod_time = datetime.fromtimestamp(os.path.getmtime(_resource_folder))
                 if self.PERIOD_START_DATE < _mod_time < self.PERIOD_END_DATE:
-                    print('DELETING... {} (Modified: {})'.format(_resource_folder, _mod_time))
+                    print('[INFO] DELETING {} (Modified: {})'.format(_resource_folder, _mod_time))
                     if self._dryrun == True:
                         return
                     shutil.rmtree(_resource_folder)  # Delete folder and its contents
 
     def run(self):
         for _root_folder in self.TARGET_ROOT_FOLDERS:
+            print('[INFO] ################# Root folder {} #################'.format(_root_folder))
             self.delete_resources_in_range(_root_folder)
 
 
