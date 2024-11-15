@@ -129,7 +129,7 @@ class S3LearnerCertPNGCleaner(_CleanerInterface):
                     print('[ERROR] Got an Unrecognized URI : {}'.format(_png_resource_uri))
 
                 elif _is_leaner_certificate:
-                    print('[INFO] DELETING {} '.format(_png_resource_uri))
+                    print('[INFO] DELETING Learner Certificate PNG: {} '.format(_png_resource_uri))
                     if self._dryrun == False:
                         self._bucket.delete_key(_png_resource_uri)       # Delete the file
 
