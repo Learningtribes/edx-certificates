@@ -63,10 +63,10 @@ class S3LearnerCertPNGCleaner(object):
     FILE_USERNAME_SEPARATOR = '_course-v1'
 
     def __init__(self, dryrun=True):
-        print('[INFO] Dryrun Mode={} | cleaning AWS/S3 files'.format(dryrun))
+        print('[INFO] Dryrun Mode={} | cleaning AWS/S3 files, Bucket Name={}'.format(dryrun, self.BUCKET))
         self._dryrun = dryrun
         self._s3_conn = boto.connect_s3(settings.CERT_AWS_ID, settings.CERT_AWS_KEY)
-        self._bucket = self._s3_conn.get_bucket(BUCKET)
+        self._bucket = self._s3_conn.get_bucket(self.BUCKET)
 
     def run(self):
         # List all files with the specified prefix
