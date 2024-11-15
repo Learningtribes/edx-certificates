@@ -83,6 +83,7 @@ class S3LearnerCertPNGCleaner(object):
                 print('[INFO] DELETING {} '.format(_png_resource_uri))
                 if self._dryrun == False:
                     self._bucket.delete_key(_png_resource_uri)       # Delete the file
+                marker = _png_resource_uri
                 count += 1
 
             # If there are no more results, stop
