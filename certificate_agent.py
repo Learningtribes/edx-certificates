@@ -77,10 +77,18 @@ def main():
                 raise
             else:
                 continue
+
         if action == 'export':
             try:
                 certs_path = xqueue_body['certs_path']
-                export = CertificateExport(course_id)
+
+                with CertificateExport(course_id, certs_path) as export:
+                    log.info(
+                        'Generating Certificates Export for {course}. Certs_path {certs_path}'.format(
+                            course=course_id, certs_path=certs_path
+                        )
+                    )
+                    download_url = export.create_and_upload()
 
             except (TypeError, ValueError, KeyError, IOError) as e:
                 log.critical('Unable to parse queue submission ({0}) : {1}'.format(e, certdata))
@@ -88,12 +96,6 @@ def main():
                     raise
                 else:
                     continue
-
-            try:
-                log.info("Generating Certificates Export for {course}.  "
-                         "Certs_path {certs_path}".format(course=course_id, certs_path=certs_path))
-                download_url = export.create_and_upload(certs_path)
-
             except Exception as e:
                 log.critical(
                     'An error occurred during certificates export generation {reason}'.format(
