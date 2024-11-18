@@ -54,7 +54,13 @@ class DFSCleaner(_CleanerInterface):
             months=int(input('Please enter Month number of files which you wanna to remain: '))
         )
         self._dryrun = dryrun
-        print('[INFO] Dryrun Mode={} | cleaning DFS files from {} to {}'.format(dryrun, self.PERIOD_START_DATE, self.PERIOD_END_DATE))
+        print(
+            '[INFO] Dryrun Mode={} | cleaning "DFS" files from {} to {} in folders : {}'.format(
+                dryrun,
+                self.PERIOD_START_DATE, self.PERIOD_END_DATE,
+                ' + '.join(self.TARGET_ROOT_FOLDERS)
+            )
+        )
 
     def delete_resources_in_range(self, root_folder):
         for _folder_name in os.listdir(root_folder):
@@ -81,7 +87,7 @@ class S3LearnerCertPNGCleaner(_CleanerInterface):
     FILE_USERNAME_SEPARATOR = '_course-v1'
 
     def __init__(self, dryrun=True):
-        print('[INFO] Dryrun Mode={} | cleaning AWS/S3 files, Bucket Name={}'.format(dryrun, self.BUCKET))
+        print('[INFO] Dryrun Mode={} | cleaning "AWS/S3" learner certificates ".PNG" files in Bucket[{}]'.format(dryrun, self.BUCKET))
         self._dryrun = dryrun
         self._s3_conn = boto.connect_s3(settings.CERT_AWS_ID, settings.CERT_AWS_KEY)
         self._bucket = self._s3_conn.get_bucket(self.BUCKET)
@@ -124,8 +130,8 @@ class S3LearnerCertPNGCleaner(_CleanerInterface):
                 _png_resource_uri = key.name
                 _last_key_name = key.name
 
-                if _png_resource_uri.endswith(self.CERT_FILE_SUFFIX):   # Only take .png files
-                    _is_leaner_certificate = self.is_leaner_certificate(_png_resource_uri)
+                if _png_resource_uri.endswith(self.CERT_FILE_SUFFIX):                           # Only take .PNG files
+                    _is_leaner_certificate = self.is_leaner_certificate(_png_resource_uri)      # Learner Certificate Only
 
                     if _is_leaner_certificate == None:
                         unrecognized_number += 1
@@ -136,10 +142,10 @@ class S3LearnerCertPNGCleaner(_CleanerInterface):
                         is_printed = True
                         print('[INFO] DELETING Learner Certificate PNG: {} '.format(_png_resource_uri.encode('utf-8')))
                         if self._dryrun == False:
-                            self._bucket.delete_key(_png_resource_uri)       # Delete the file
+                            self._bucket.delete_key(_png_resource_uri)                          # Delete .PNG files of Learner Certificate
                             removed_learner_png_number += 1
                     else:
-                        example_cert_number += 1
+                        example_cert_number += 1                                                # Count Example Certificates Number
 
             # If no keys were processed, we're done
             if not _last_key_name:
