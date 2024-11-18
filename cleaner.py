@@ -1,5 +1,7 @@
 """
-    Remove unwanted files from Disk or S3 by arguments.
+    Remove unwanted files from DFS or S3 by arguments :
+        - DFS:      Local certificate folders generated before uploading to S3
+        - AWS/S3:   .PNG files of Learner Certificate
 
     Usage:
         (certs) certs@learning-tribes:~$ pwd
