@@ -173,10 +173,10 @@ if __name__ == '__main__':
         def _argsStr2Bool(arg_str):
             return True if arg_str.lower() in ('yes', 'true', 't', '1') else False
 
-        parser = ArgumentParser(description=r'A resource ( DFS / S3 ) cleaner.')
-        parser.add_argument('--target_type', default='EmptyType', help='Options => dfs / s3')
-        parser.add_argument('--dryrun', type=_argsStr2Bool, default=True, help='Options => dfs / s3')
-        args = parser.parse_args()
+        _parser = ArgumentParser(description=r'A resource ( DFS / S3 ) cleaner.')
+        _parser.add_argument('--target_type', default='EmptyType', help='Options => dfs / s3')
+        _parser.add_argument('--dryrun', type=_argsStr2Bool, default=True, help='Options => dfs / s3')
+        args = _parser.parse_args()
         if args.target_type not in ('dfs', 's3'):
             raise Exception('[Error] Invalid target type: {}'.format(args.target_type))
 

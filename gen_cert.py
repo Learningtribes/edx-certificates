@@ -2184,7 +2184,94 @@ class CertificateGen(object):
         return (download_uuid, verify_uuid, download_url)
 
 
+def retry(times, exceptions):
+    def decorator(func):
+        def newfn(*args, **kwargs):
+            for attempt in range(0, times):
+                try:
+                    return func(*args, **kwargs)
+                except Exception:
+                    log.error('Exception thrown when attempting to run %s, (%d / %d)'.format(func, attempt, times))
+                    if attempt + 1 >= times:
+                        raise
+            return func(*args, **kwargs)
+        return newfn
+    return decorator
+
+
 class CertificateExport(object):
+
+    class _S3Files2Zip(object):
+        def __init__(self, tmp_folder, course_id, s3_certs_files, cleanup=True):
+            self._cleanup = cleanup
+            self._tmp_folder = tmp_folder
+            self._s3_certs_files = s3_certs_files
+            self._file_path = os.path.join(tmp_folder, S3_CERT_PATH, 'certs-zip')
+            self._zip_file_name = os.path.join(
+                self._file_path, '{course}_{date}.zip'.format(
+                    course=course_id, date=datetime.datetime.now()
+                ).replace(':', '-')
+            )
+            self._ensure_dir(self._zip_file_name)
+            self._s3_conn = boto.connect_s3(settings.CERT_AWS_ID, settings.CERT_AWS_KEY)
+            self._s3_bucket = self._s3_conn.get_bucket(BUCKET)
+
+        @classmethod
+        def _ensure_dir(cls, f):
+            d = os.path.dirname(f)
+            if not os.path.exists(d):
+                os.makedirs(d)
+
+        @retry(times=3)
+        def compress_s3_PDFs(self):
+            try:
+                downloaded_files = []
+
+                for _s3_cert_path in self._s3_certs_files:
+                    _key = self._s3_bucket.get_key(_s3_cert_path)
+                    _local_file_path = os.path.join(self._file_path, os.path.basename(_s3_cert_path))
+                    log.info('[INFO] Downloading {} to {}...'.format(_s3_cert_path, _local_file_path))
+
+                    if _key is None:
+                        log.error('File not found in S3 Bucket: {}'.format(_s3_cert_path))
+                        continue
+                    _key.get_contents_to_filename(_local_file_path)
+                    downloaded_files.append(_local_file_path)
+
+                with ZipFile(self._zip_file_name, 'w') as zip_handle:
+                    for _file_path in downloaded_files:
+                        zip_handle.write(_file_path, arcname=os.path.basename(_file_path))
+
+            except:
+                raise
+            else:
+                log.info("compressed {} to {}".format(', '.join(self._s3_certs_files), self._zip_file_name))
+
+        @retry(times=3)
+        def upload_zip_file(self):
+            try:
+                _key = Key(
+                    self._s3_bucket, name=os.path.relpath(self._zip_file_name, start=self._tmp_folder)
+                )
+                _key.set_contents_from_filename(self._zip_file_name, policy='public-read')
+            except:
+                raise
+            else:
+                log.info('uploaded {} to S3: {}'.format(self._zip_file_name, dest_path))
+
+        def zip_and_upload(self):
+            self.compress_s3_PDFs()
+            self.upload_zip_file()
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            print(r'[INFO] Removing tmp zip file...')
+            if self._cleanup:
+                if os.path.exists(self._file_path):
+                    shutil.rmtree(self._file_path)
+
 
     def __init__(self, course_id):
         self.course_id = course_id
@@ -2208,6 +2295,10 @@ class CertificateExport(object):
         file_name = os.path.join(file_path, file_name)
         self._ensure_dir(file_name)
         certs_base_dir = '/edx/var/certs/www-data/downloads'
+
+        with _S3Files2Zip(dir_prefix, self.course_id, certs_path) as _s3_zip_handle:
+            _s3_zip_handle.zip_and_upload()
+
         zip_handler = zipfile.ZipFile(file_name, 'w', zipfile.ZIP_DEFLATED)
         for f in certs_path:
             zip_handler.write(os.path.join(certs_base_dir, f), f.rsplit('/')[-1])
