@@ -2206,8 +2206,10 @@ class CertificateExport(object):
         self._ensure_dir(self._dir_prefix)
         self._course_id = course_id
         self._cleanup = cleanup
-        self._s3_certs_files = s3_certs_files  # ['de9c732ff1ba4f24893bbab79cab50e1/Aaron_course-v1-edX+AGT101+2020_T1_Certificate.pdf',...]
-        self._zip_file_folder = os.path.join(self._dir_prefix, S3_CERT_PATH, 'certs-zip')
+        self._s3_certs_files = s3_certs_files
+        self._zip_file_folder = os.path.join(   # Contain tmp `pdfs` + `zip`
+            self._dir_prefix, S3_CERT_PATH, 'certs-zip'
+        )
         self._zip_file_name = None
         self._s3_conn = None
         self._s3_bucket = None
@@ -2216,12 +2218,13 @@ class CertificateExport(object):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        log.info('[INFO] Removing tmp zip file...')
+        log.info('[INFO] Removing tmp zip files folder: {}'.format(self._zip_file_folder))
         if self._cleanup:
             if os.path.exists(self._zip_file_folder):
                 shutil.rmtree(self._zip_file_folder)
 
         if self._s3_conn:
+            log.info('[INFO] Closing AWS/S3 handle...')
             self._s3_conn.close()       # Close S3 connection handle
 
     @classmethod
