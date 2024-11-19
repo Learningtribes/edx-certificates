@@ -2245,7 +2245,8 @@ class CertificateExport(object):
         try:
             downloaded_files = []
 
-            for _s3_cert_path in self._s3_certs_files:
+            for _cert_path in self._s3_certs_files:
+                _s3_cert_path = os.path.join(S3_CERT_PATH, _cert_path)
 
                 _key = self._s3_bucket.get_key(_s3_cert_path)
                 _local_file_path = os.path.join(self._zip_file_folder, os.path.basename(_s3_cert_path))
