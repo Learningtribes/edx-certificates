@@ -6,6 +6,7 @@
     Usage:
         (certs) certs@learning-tribes:~$ pwd
         /edx/app/certs
+        $ sudo -H -u certs bash
         (certs) certs@learning-tribes:~$ source /edx/app/certs/venvs/certs/bin/activate
         (certs) certs@learning-tribes:~$ /edx/app/certs/venvs/certs/bin/python /edx/app/certs/certificates/cleaner.py --target_type=[s3|dfs] --dryrun=[true|false]
         [INFO] Dryrun Mode=True | cleaning AWS/S3 files, Bucket Name=lt-learning-customer2-default
