@@ -2190,8 +2190,8 @@ def retry(times):
             for attempt in range(0, times):
                 try:
                     return func(*args, **kwargs)
-                except Exception:
-                    log.error('Exception thrown when attempting to run %s, (%d / %d)'.format(func, attempt, times))
+                except Exception as e:
+                    log.error('Exception thrown when attempting to run {}, ({} / {}). Error => {}'.format(func, attempt, times, e))
                     if attempt + 1 >= times:
                         raise
             return func(*args, **kwargs)
@@ -2278,9 +2278,9 @@ class CertificateExport(object):
         except:
             raise
         else:
-            log.info('uploaded {} to {}'.format(self._zip_file_name, dest_path))
+            log.info('uploaded {} to {}'.format(self._zip_file_name, _dest_path))
 
-        return '{base_url}/{file}'.format(base_url=settings.CERT_DOWNLOAD_URL, file=urllib.quote(dest_path))
+        return '{base_url}/{file}'.format(base_url=settings.CERT_DOWNLOAD_URL, file=urllib.quote(_dest_path))
 
     def create_and_upload(self):
         self._initialize_s3_handles()
