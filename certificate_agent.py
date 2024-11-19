@@ -71,6 +71,7 @@ def main():
             xqueue_header = json.loads(certdata['xqueue_header'])
             action = xqueue_body['action']
             course_id = xqueue_body['course_id']
+            certs_path = xqueue_body['certs_path'] if action == 'export' else None  # For Type: `export` Action
         except (TypeError, ValueError, KeyError, IOError) as e:
             log.critical('Unable to parse queue submission ({0}) : {1}'.format(e, certdata))
             if settings.DEBUG:
@@ -80,34 +81,16 @@ def main():
 
         if action == 'export':
             try:
-                certs_path = xqueue_body['certs_path']
-
                 with CertificateExport(course_id, certs_path) as export:
-                    log.info(
-                        'Generating Certificates Export for {course}. Certs_path {certs_path}'.format(
-                            course=course_id, certs_path=certs_path
-                        )
-                    )
+                    log.info('Generating Certificates Export for {}. Certs_path {}'.format(course_id, certs_path))
                     download_url = export.create_and_upload()
 
-            except (TypeError, ValueError, KeyError, IOError) as e:
-                log.critical('Unable to parse queue submission ({0}) : {1}'.format(e, certdata))
-                if settings.DEBUG:
-                    raise
-                else:
-                    continue
             except Exception as e:
-                log.critical(
-                    'An error occurred during certificates export generation {reason}'.format(
-                        reason=e,
-                    )
-                )
+                log.critical('An error occurred during certificates export generation {}'.format(e))
                 xqueue_reply = {
                     'xqueue_header': json.dumps(xqueue_header),
                     'xqueue_body': json.dumps({
-                        'error': 'There was an error processing the certificates export request: {error}'.format(
-                            error=e,
-                        ),
+                        'error': 'There was an error processing the certificates export request: {}'.format(e),
                         'course_id': course_id,
                     }),
                 }
@@ -120,13 +103,9 @@ def main():
             # post result back to the LMS
             xqueue_reply = {
                 'xqueue_header': json.dumps(xqueue_header),
-                'xqueue_body': json.dumps({
-                    'action': action,
-                    'course_id': course_id,
-                    'url': download_url,
-                }),
+                'xqueue_body': json.dumps({'action': action, 'course_id': course_id, 'url': download_url}),
             }
-            log.info("Posting result to the LMS: {0}".format(xqueue_reply))
+            log.info('Posting result to the LMS: {}'.format(xqueue_reply))
             manager.respond(xqueue_reply)
 
         else:
