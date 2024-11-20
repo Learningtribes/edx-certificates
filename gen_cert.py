@@ -2200,6 +2200,11 @@ def retry(times):
 
 
 class CertificateExport(object):
+    """ 1) Download PDFs to `/tmp/...` folder from S3.
+        2) Zip PDFs to `/tmp/...`.
+        3) Upload new created zip file to S3.
+        4) Clean local tmp files.
+    """
     def __init__(self, course_id, s3_certs_files, cleanup=True):
         self._ensure_dir(TMP_GEN_DIR)
         self._dir_prefix = tempfile.mkdtemp(prefix=TMP_GEN_DIR)
@@ -2218,14 +2223,18 @@ class CertificateExport(object):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        log.info('[INFO] Removing tmp zip files folder: {}'.format(self._zip_file_folder))
-        if self._cleanup:
-            if os.path.exists(self._zip_file_folder):
-                shutil.rmtree(self._zip_file_folder)
+        try:
+            if self._cleanup:
+                log.info('[INFO] Removing tmp zip files folder: {}'.format(self._zip_file_folder))
+                if os.path.exists(self._zip_file_folder):
+                    shutil.rmtree(self._zip_file_folder)
 
-        if self._s3_conn:
-            log.info('[INFO] Closing AWS/S3 handle...')
-            self._s3_conn.close()       # Close S3 connection handle
+            if self._s3_conn:
+                log.info('[INFO] Closing AWS/S3 handle...')
+                self._s3_conn.close()       # Close S3 connection handle
+
+        except Exception as e:
+            log.error('[ERROR] Got exception while releasing resources: {}'.format(e))
 
     @classmethod
     def _ensure_dir(cls, f):
