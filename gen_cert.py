@@ -2252,7 +2252,6 @@ class CertificateExport(object):
         self._s3_conn = boto.connect_s3(settings.CERT_AWS_ID, settings.CERT_AWS_KEY)
         self._s3_bucket = self._s3_conn.get_bucket(BUCKET)
 
-    @retry(times=3)
     def _compress_s3_PDFs(self):
         try:
             downloaded_files = []
@@ -2280,10 +2279,11 @@ class CertificateExport(object):
         else:
             log.info("compressed {} to {}".format(', '.join(self._s3_certs_files), self._zip_file_name))
 
-    @retry(times=3)
+    @retry(times=2)
     def _upload_zip_file_to_s3(self):
         try:
             _dest_path = os.path.relpath(self._zip_file_name, start=self._dir_prefix)
+
             _key = Key(self._s3_bucket, name=_dest_path)
             _key.set_contents_from_filename(self._zip_file_name, policy='public-read')
 
