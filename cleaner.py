@@ -49,7 +49,7 @@ class DFSCleaner(_CleanerInterface):
         '/edx/var/certs/www-data/downloads',
         '/edx/var/certs/www-data/cert'
     ]
-    PERIOD_START_DATE = datetime(2020, 2, 12)
+    PERIOD_START_DATE = datetime(2020, 2, 15)
     PERIOD_END_DATE = None
 
     def __init__(self, dryrun=True):
