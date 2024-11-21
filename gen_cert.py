@@ -232,7 +232,7 @@ class CertificateGen(object):
         self.score = 0
         self.duration = None
         self.completion = None
-        self._is_example_certificate = is_example_certificate
+        self.is_example_certificate = is_example_certificate
 
         def interstitial_factory():
             """ Generate default values for interstitial_texts defaultdict """
@@ -815,8 +815,8 @@ class CertificateGen(object):
             download_url
         )
 
-        # Convert PDF into PNG for Example Certificates Only ! ( `_is_example_certificate` = True )
-        if self._is_example_certificate == True and self._render_pdf_to_image_fitz(filename) and download_url and download_url.strip():
+        # Convert PDF into PNG for Example Certificates Only ! ( `is_example_certificate` = True )
+        if self.is_example_certificate == True and self._render_pdf_to_image_fitz(filename) and download_url and download_url.strip():
             png_url = download_url.replace('.pdf', '.png')
         else:
             png_url = None
@@ -2256,18 +2256,18 @@ class CertificateExport(object):
         try:
             downloaded_files = []
 
-            for _cert_path in self.s3_certs_files:
-                _s3_cert_path = os.path.join(S3_CERT_PATH, _cert_path)
+            for cert_path in self.s3_certs_files:
+                s3_cert_path = os.path.join(S3_CERT_PATH, cert_path)
 
-                _key = self.s3_bucket.get_key(_s3_cert_path)
-                _local_file_path = os.path.join(self.zip_file_folder, os.path.basename(_s3_cert_path))
+                key = self.s3_bucket.get_key(s3_cert_path)
+                _local_file_path = os.path.join(self.zip_file_folder, os.path.basename(s3_cert_path))
 
-                if _key is None:
-                    log.error('File not found in S3 Bucket: {}'.format(_s3_cert_path))
+                if key is None:
+                    log.error('File not found in S3 Bucket: {}'.format(s3_cert_path))
                     continue
 
-                log.info('[INFO] Downloading {} to {}...'.format(_s3_cert_path, _local_file_path))
-                _key.get_contents_to_filename(_local_file_path)
+                log.info('[INFO] Downloading {} to {}...'.format(s3_cert_path, _local_file_path))
+                key.get_contents_to_filename(_local_file_path)
                 downloaded_files.append(_local_file_path)
 
             with zipfile.ZipFile(self.zip_file_name, 'w') as zip_handle:
@@ -2282,17 +2282,17 @@ class CertificateExport(object):
     @retry(times=2)
     def upload_zip_file_to_s3(self):
         try:
-            _dest_path = os.path.relpath(self.zip_file_name, start=self.dir_prefix)
+            dest_path = os.path.relpath(self.zip_file_name, start=self.dir_prefix)
 
-            _key = Key(self.s3_bucket, name=_dest_path)
-            _key.set_contents_from_filename(self.zip_file_name, policy='public-read')
+            key = Key(self.s3_bucket, name=dest_path)
+            key.set_contents_from_filename(self.zip_file_name, policy='public-read')
 
         except:
             raise
         else:
-            log.info('uploaded {} to {}'.format(self.zip_file_name, _dest_path))
+            log.info('uploaded {} to {}'.format(self.zip_file_name, dest_path))
 
-        return '{base_url}/{file}'.format(base_url=settings.CERT_DOWNLOAD_URL, file=urllib.quote(_dest_path))
+        return '{base_url}/{file}'.format(base_url=settings.CERT_DOWNLOAD_URL, file=urllib.quote(dest_path))
 
     def create_and_upload(self):
         self.initialize_s3_handles()
