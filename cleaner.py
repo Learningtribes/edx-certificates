@@ -39,7 +39,7 @@ class DFSCleaner(object):
 
     def __init__(self):
         self.PERIOD_START_DATE = datetime.strptime(
-            input('Please enter Start date [Format: 2019-12-06]: '),
+            raw_input('Please enter Start date [Format: 2019-12-06]: '),
             '%Y-%m-%d'
         )
         print(
