@@ -56,7 +56,7 @@ class DFSCleaner(_CleanerInterface):
         self.PERIOD_END_DATE = datetime.now() - relativedelta(
             months=int(input('Please enter Month number of files which you wanna to remain: '))
         )
-        self._dryrun = dryrun
+        self.dryrun = dryrun
         print(
             '[INFO] Dryrun Mode={} | cleaning "DFS" files from {} to {} in folders : {}'.format(
                 dryrun,
@@ -72,7 +72,7 @@ class DFSCleaner(_CleanerInterface):
                 _mod_time = datetime.fromtimestamp(os.path.getmtime(_resource_folder))
                 if self.PERIOD_START_DATE < _mod_time < self.PERIOD_END_DATE:
                     print('[INFO] DELETING {} (Modified: {})'.format(_resource_folder, _mod_time))
-                    if self._dryrun == False:
+                    if self.dryrun == False:
                         shutil.rmtree(_resource_folder)  # Delete folder and its contents
 
     def run(self):
@@ -91,9 +91,9 @@ class S3LearnerCertPNGCleaner(_CleanerInterface):
 
     def __init__(self, dryrun=True):
         print('[INFO] Dryrun Mode={} | cleaning "AWS/S3" learner certificates ".PNG" files in Bucket[{}]'.format(dryrun, self.BUCKET))
-        self._dryrun = dryrun
-        self._s3_conn = boto.connect_s3(settings.CERT_AWS_ID, settings.CERT_AWS_KEY)
-        self._bucket = self._s3_conn.get_bucket(self.BUCKET)
+        self.dryrun = dryrun
+        self.s3_conn = boto.connect_s3(settings.CERT_AWS_ID, settings.CERT_AWS_KEY)
+        self.bucket = self.s3_conn.get_bucket(self.BUCKET)
 
     @classmethod
     def is_leaner_certificate(cls, s3_uri):
@@ -126,7 +126,7 @@ class S3LearnerCertPNGCleaner(_CleanerInterface):
             is_printed = False
             batch_count += 1
             # List all files with the specified prefix
-            results = self._bucket.list(prefix=self.CERT_FILE_PREFIX, marker=marker)
+            results = self.bucket.list(prefix=self.CERT_FILE_PREFIX, marker=marker)
             _last_key_name = None       # Track the last key name in the current batch
 
             for key in results:
@@ -144,8 +144,8 @@ class S3LearnerCertPNGCleaner(_CleanerInterface):
                     elif _is_leaner_certificate:
                         is_printed = True
                         print('[INFO] DELETING Learner Certificate PNG: {} '.format(_png_resource_uri.encode('utf-8')))
-                        if self._dryrun == False:
-                            self._bucket.delete_key(_png_resource_uri)                          # Delete .PNG files of Learner Certificate
+                        if self.dryrun == False:
+                            self.bucket.delete_key(_png_resource_uri)                          # Delete .PNG files of Learner Certificate
                             removed_learner_png_number += 1
                     else:
                         example_cert_number += 1                                                # Count Example Certificates Number
@@ -171,19 +171,19 @@ class S3LearnerCertPNGCleaner(_CleanerInterface):
 
 if __name__ == '__main__':
     try:
-        def _argsStr2Bool(arg_str):
+        def argsStr2Bool(arg_str):
             return True if arg_str.lower() in ('yes', 'true', 't', '1') else False
 
-        _parser = ArgumentParser(description=r'A resource ( DFS / S3 ) cleaner.')
-        _parser.add_argument('--target_type', default='EmptyType', help='Options => dfs / s3')
-        _parser.add_argument('--dryrun', type=_argsStr2Bool, default=True, help='Options => dfs / s3')
-        args = _parser.parse_args()
+        parser = ArgumentParser(description=r'A resource ( DFS / S3 ) cleaner.')
+        parser.add_argument('--target_type', default='EmptyType', help='Options => dfs / s3')
+        parser.add_argument('--dryrun', type=argsStr2Bool, default=True, help='Options => dfs / s3')
+        args = parser.parse_args()
         if args.target_type not in ('dfs', 's3'):
             raise Exception('[Error] Invalid target type: {}'.format(args.target_type))
 
         ########### Start to run cleaning task ###########
-        _cleaner = DFSCleaner(args.dryrun) if args.target_type == 'dfs' else S3LearnerCertPNGCleaner(args.dryrun)
-        _cleaner.run()
+        cleaner = DFSCleaner(args.dryrun) if args.target_type == 'dfs' else S3LearnerCertPNGCleaner(args.dryrun)
+        cleaner.run()
 
         print(r'Done !')
 

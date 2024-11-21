@@ -2206,61 +2206,61 @@ class CertificateExport(object):
         4) Clean local tmp files.
     """
     def __init__(self, course_id, s3_certs_files, cleanup=True):
-        self._ensure_dir(TMP_GEN_DIR)
-        self._dir_prefix = tempfile.mkdtemp(prefix=TMP_GEN_DIR)
-        self._ensure_dir(self._dir_prefix)
-        self._course_id = course_id
-        self._cleanup = cleanup
-        self._s3_certs_files = s3_certs_files
-        self._zip_file_folder = os.path.join(   # Contain tmp `pdfs` + `zip`
-            self._dir_prefix, S3_CERT_PATH, 'certs-zip'
+        self.ensure_dir(TMP_GEN_DIR)
+        self.dir_prefix = tempfile.mkdtemp(prefix=TMP_GEN_DIR)
+        self.ensure_dir(self.dir_prefix)
+        self.course_id = course_id
+        self.cleanup = cleanup
+        self.s3_certs_files = s3_certs_files
+        self.zip_file_folder = os.path.join(   # Contain tmp `pdfs` + `zip`
+            self.dir_prefix, S3_CERT_PATH, 'certs-zip'
         )
-        self._zip_file_name = None
-        self._s3_conn = None
-        self._s3_bucket = None
+        self.zip_file_name = None
+        self.s3_conn = None
+        self.s3_bucket = None
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         try:
-            if self._cleanup:
-                log.info('[INFO] Removing tmp zip files folder: {}'.format(self._zip_file_folder))
-                if os.path.exists(self._zip_file_folder):
-                    shutil.rmtree(self._zip_file_folder)
+            if self.cleanup:
+                log.info('[INFO] Removing tmp zip files folder: {}'.format(self.zip_file_folder))
+                if os.path.exists(self.zip_file_folder):
+                    shutil.rmtree(self.zip_file_folder)
 
-            if self._s3_conn:
+            if self.s3_conn:
                 log.info('[INFO] Closing AWS/S3 handle...')
-                self._s3_conn.close()       # Close S3 connection handle
+                self.s3_conn.close()       # Close S3 connection handle
 
         except Exception as e:
             log.error('[ERROR] Got exception while releasing resources: {}'.format(e))
 
     @classmethod
-    def _ensure_dir(cls, f):
+    def ensure_dir(cls, f):
         d = os.path.dirname(f)
         if not os.path.exists(d):
             os.makedirs(d)
 
-    def _initialize_s3_handles(self):
-        self._zip_file_name = os.path.join(
-            self._zip_file_folder, '{course}_{date}.zip'.format(
-                course=self._course_id, date=datetime.datetime.now()
+    def initialize_s3_handles(self):
+        self.zip_file_name = os.path.join(
+            self.zip_file_folder, '{course}_{date}.zip'.format(
+                course=self.course_id, date=datetime.datetime.now()
             ).replace(':', '-')
         )
-        self._ensure_dir(self._zip_file_name)
-        self._s3_conn = boto.connect_s3(settings.CERT_AWS_ID, settings.CERT_AWS_KEY)
-        self._s3_bucket = self._s3_conn.get_bucket(BUCKET)
+        self.ensure_dir(self.zip_file_name)
+        self.s3_conn = boto.connect_s3(settings.CERT_AWS_ID, settings.CERT_AWS_KEY)
+        self.s3_bucket = self.s3_conn.get_bucket(BUCKET)
 
-    def _compress_s3_PDFs(self):
+    def compress_s3_PDFs(self):
         try:
             downloaded_files = []
 
-            for _cert_path in self._s3_certs_files:
+            for _cert_path in self.s3_certs_files:
                 _s3_cert_path = os.path.join(S3_CERT_PATH, _cert_path)
 
-                _key = self._s3_bucket.get_key(_s3_cert_path)
-                _local_file_path = os.path.join(self._zip_file_folder, os.path.basename(_s3_cert_path))
+                _key = self.s3_bucket.get_key(_s3_cert_path)
+                _local_file_path = os.path.join(self.zip_file_folder, os.path.basename(_s3_cert_path))
 
                 if _key is None:
                     log.error('File not found in S3 Bucket: {}'.format(_s3_cert_path))
@@ -2270,32 +2270,32 @@ class CertificateExport(object):
                 _key.get_contents_to_filename(_local_file_path)
                 downloaded_files.append(_local_file_path)
 
-            with zipfile.ZipFile(self._zip_file_name, 'w') as zip_handle:
+            with zipfile.ZipFile(self.zip_file_name, 'w') as zip_handle:
                 for _s3_file in downloaded_files:
                     zip_handle.write(_s3_file, arcname=os.path.basename(_s3_file))
 
         except:
             raise
         else:
-            log.info("compressed {} to {}".format(', '.join(self._s3_certs_files), self._zip_file_name))
+            log.info("compressed {} to {}".format(', '.join(self.s3_certs_files), self.zip_file_name))
 
     @retry(times=2)
-    def _upload_zip_file_to_s3(self):
+    def upload_zip_file_to_s3(self):
         try:
-            _dest_path = os.path.relpath(self._zip_file_name, start=self._dir_prefix)
+            _dest_path = os.path.relpath(self.zip_file_name, start=self.dir_prefix)
 
-            _key = Key(self._s3_bucket, name=_dest_path)
-            _key.set_contents_from_filename(self._zip_file_name, policy='public-read')
+            _key = Key(self.s3_bucket, name=_dest_path)
+            _key.set_contents_from_filename(self.zip_file_name, policy='public-read')
 
         except:
             raise
         else:
-            log.info('uploaded {} to {}'.format(self._zip_file_name, _dest_path))
+            log.info('uploaded {} to {}'.format(self.zip_file_name, _dest_path))
 
         return '{base_url}/{file}'.format(base_url=settings.CERT_DOWNLOAD_URL, file=urllib.quote(_dest_path))
 
     def create_and_upload(self):
-        self._initialize_s3_handles()
-        self._compress_s3_PDFs()
+        self.initialize_s3_handles()
+        self.compress_s3_PDFs()
 
-        return self._upload_zip_file_to_s3()
+        return self.upload_zip_file_to_s3()
