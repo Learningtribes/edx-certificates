@@ -13,10 +13,8 @@
         Done !
 
 """
-from abc import ABCMeta, abstractmethod
 from argparse import ArgumentParser
 from datetime import datetime
-from dateutil.relativedelta import relativedelta
 import os
 import shutil
 from sys import exit as process_terminate
@@ -29,19 +27,7 @@ from boto.s3.key import Key
 import settings
 
 
-class _CleanerInterface(object):
-    """Regulate all subclass of cleaner
-    """
-    __metaclass__ = ABCMeta
-
-    @abstractmethod
-    def run(self):
-        """Execute cleaning task
-        """
-        raise NotImplementedError
-
-
-class DFSCleaner(_CleanerInterface):
+class DFSCleaner(object):
     """Clean unwanted files in DFS ( folders: /downloads + /cert ).
         And we can specify the `End Date` of date range in the process.
     """
@@ -49,41 +35,34 @@ class DFSCleaner(_CleanerInterface):
         '/edx/var/certs/www-data/downloads',
         '/edx/var/certs/www-data/cert'
     ]
-    PERIOD_START_DATE = datetime(2020, 2, 15)
-    PERIOD_END_DATE = None
+    PERIOD_START_DATE = None
 
-    def __init__(self, dryrun=True):
-        self.PERIOD_END_DATE = datetime.now() - relativedelta(
-            months=int(input('Please enter Month number of files which you wanna to remain: '))
+    def __init__(self):
+        self.PERIOD_START_DATE = datetime.strptime(
+            input('Please enter Start date [Format: 2019-12-06]: '),
+            '%Y-%m-%d'
         )
-        print('Please enter start date : ')
-        self.PERIOD_START_DATE = datetime(int(input('Year:')), int(input('Month:')), int(input('Day:')))
-        self.dryrun = dryrun
         print(
-            '[INFO] Dryrun Mode={} | cleaning "DFS" files from {} to {} in folders : {}'.format(
-                dryrun,
-                self.PERIOD_START_DATE, self.PERIOD_END_DATE,
-                ' + '.join(self.TARGET_ROOT_FOLDERS)
+            '[INFO] cleaning "DFS" files since {} in folders : {}'.format(
+                self.PERIOD_START_DATE, ' + '.join(self.TARGET_ROOT_FOLDERS)
             )
         )
 
-    def delete_resources_in_range(self, root_folder):
-        for folder_name in os.listdir(root_folder):
-            resource_folder = os.path.join(root_folder, folder_name)
-            if os.path.isdir(resource_folder):
-                _mod_time = datetime.fromtimestamp(os.path.getmtime(resource_folder))
-                if self.PERIOD_START_DATE < _mod_time < self.PERIOD_END_DATE:
-                    print('[INFO] DELETING {} (Modified: {})'.format(resource_folder, _mod_time))
-                    if self.dryrun == False:
-                        shutil.rmtree(resource_folder)  # Delete folder and its contents
+    def run(self, dryrun=True):
+        for root_folder in self.TARGET_ROOT_FOLDERS:
+            print('[INFO] ################# Root folder {} #################'.format(root_folder))
 
-    def run(self):
-        for _root_folder in self.TARGET_ROOT_FOLDERS:
-            print('[INFO] ################# Root folder {} #################'.format(_root_folder))
-            self.delete_resources_in_range(_root_folder)
+            for folder_name in os.listdir(root_folder):
+                resource_folder = os.path.join(root_folder, folder_name)
+                if os.path.isdir(resource_folder):
+                    mod_time = datetime.fromtimestamp(os.path.getmtime(resource_folder))
+                    if self.PERIOD_START_DATE <= mod_time:
+                        print('[INFO] DELETING {} (Modified: {})'.format(resource_folder, mod_time))
+                        if dryrun == False:
+                            shutil.rmtree(resource_folder)  # Delete folder and its contents
 
 
-class S3LearnerCertPNGCleaner(_CleanerInterface):
+class S3LearnerCertPNGCleaner(object):
     """Delete PNG files associated with `Learner certificates` on S3
     """
     BUCKET = settings.CERT_BUCKET
@@ -91,9 +70,8 @@ class S3LearnerCertPNGCleaner(_CleanerInterface):
     CERT_FILE_SUFFIX = '.png'
     FILE_USERNAME_SEPARATOR = '_course-v1'
 
-    def __init__(self, dryrun=True):
-        print('[INFO] Dryrun Mode={} | cleaning "AWS/S3" learner certificates ".PNG" files in Bucket[{}]'.format(dryrun, self.BUCKET))
-        self.dryrun = dryrun
+    def __init__(self):
+        print('[INFO] cleaning "AWS/S3" learner certificates ".PNG" files in Bucket[{}]'.format(self.BUCKET))
         self.s3_conn = boto.connect_s3(settings.CERT_AWS_ID, settings.CERT_AWS_KEY)
         self.bucket = self.s3_conn.get_bucket(self.BUCKET)
 
@@ -105,6 +83,7 @@ class S3LearnerCertPNGCleaner(_CleanerInterface):
         """
         sectors = s3_uri.split(cls.FILE_USERNAME_SEPARATOR)
         if len(sectors) < 2:
+            print('[ERROR] Invalid URI format: {}'.format(s3_uri.encode('utf-8')))
             return None
 
         _username_or_uuid = sectors[0].split('/')[-1]
@@ -115,9 +94,10 @@ class S3LearnerCertPNGCleaner(_CleanerInterface):
             except ValueError:
                 return True         # (Username): It's a Learner Certificate if ValueError raised here.
 
+        print('[ERROR] Got an Unrecognized URI : {}'.format(s3_uri.encode('utf-8')))
         return None
 
-    def delete_png_once(self):
+    def run(self, dryrun=True):
         example_cert_number = 0
         unrecognized_number = 0
         removed_learner_png_number = 0
@@ -125,7 +105,6 @@ class S3LearnerCertPNGCleaner(_CleanerInterface):
         marker = None       # Used for pagination
 
         while True:
-            is_printed = False
             batch_count += 1
             # List all files with the specified prefix
             results = self.bucket.list(prefix=self.CERT_FILE_PREFIX, marker=marker)
@@ -140,13 +119,10 @@ class S3LearnerCertPNGCleaner(_CleanerInterface):
 
                     if is_leaner_certificate == None:
                         unrecognized_number += 1
-                        is_printed = True
-                        print('[ERROR] Got an Unrecognized URI : {}'.format(png_resource_uri.encode('utf-8')))
 
                     elif is_leaner_certificate:
-                        is_printed = True
                         print('[INFO] DELETING Learner Certificate PNG: {} '.format(png_resource_uri.encode('utf-8')))
-                        if self.dryrun == False:
+                        if dryrun == False:
                             self.bucket.delete_key(png_resource_uri)                            # Delete .PNG files of Learner Certificate
                             removed_learner_png_number += 1
                     else:
@@ -158,17 +134,11 @@ class S3LearnerCertPNGCleaner(_CleanerInterface):
             # Update the marker to the last key name
             marker = last_key_name
 
-            if not is_printed:
-                print('[INFO] Batch No. ---> {}, marker flag ---> {}'.format(batch_count, marker.encode('utf-8')))
-
         print(
             '[INFO] Example Certificate Number = {}, Unrecognized URI Number = {}, Removed Learner Certificate PNG Number = {}'.format(
                 example_cert_number, unrecognized_number, removed_learner_png_number
             )
         )
-
-    def run(self):
-        self.delete_png_once()
 
 
 if __name__ == '__main__':
@@ -180,12 +150,15 @@ if __name__ == '__main__':
         parser.add_argument('--target_type', default='EmptyType', help='Options => dfs / s3')
         parser.add_argument('--dryrun', type=argsStr2Bool, default=True, help='Options => dfs / s3')
         args = parser.parse_args()
-        if args.target_type not in ('dfs', 's3'):
-            raise Exception('[Error] Invalid target type: {}'.format(args.target_type))
+        print('[INFO] Dryrun mode : {}'.format('ON' if args.dryrun else 'OFF'))
 
         ########### Start to run cleaning task ###########
-        cleaner = DFSCleaner(args.dryrun) if args.target_type == 'dfs' else S3LearnerCertPNGCleaner(args.dryrun)
-        cleaner.run()
+        if args.target_type == 'dfs':
+            DFSCleaner().run(args.dryrun)
+        elif args.target_type == 's3':
+            S3LearnerCertPNGCleaner().run(args.dryrun)
+        else:
+            raise Exception('[Error] Invalid target type: {}'.format(args.target_type))
 
         print(r'Done !')
 
