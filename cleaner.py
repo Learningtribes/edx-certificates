@@ -66,14 +66,14 @@ class DFSCleaner(_CleanerInterface):
         )
 
     def delete_resources_in_range(self, root_folder):
-        for _folder_name in os.listdir(root_folder):
-            _resource_folder = os.path.join(root_folder, _folder_name)
-            if os.path.isdir(_resource_folder):
-                _mod_time = datetime.fromtimestamp(os.path.getmtime(_resource_folder))
+        for folder_name in os.listdir(root_folder):
+            resource_folder = os.path.join(root_folder, folder_name)
+            if os.path.isdir(resource_folder):
+                _mod_time = datetime.fromtimestamp(os.path.getmtime(resource_folder))
                 if self.PERIOD_START_DATE < _mod_time < self.PERIOD_END_DATE:
-                    print('[INFO] DELETING {} (Modified: {})'.format(_resource_folder, _mod_time))
+                    print('[INFO] DELETING {} (Modified: {})'.format(resource_folder, _mod_time))
                     if self.dryrun == False:
-                        shutil.rmtree(_resource_folder)  # Delete folder and its contents
+                        shutil.rmtree(resource_folder)  # Delete folder and its contents
 
     def run(self):
         for _root_folder in self.TARGET_ROOT_FOLDERS:
@@ -101,11 +101,11 @@ class S3LearnerCertPNGCleaner(_CleanerInterface):
             `False`: Example Certificate
             `None`: Unrecognized
         """
-        _sectors = s3_uri.split(cls.FILE_USERNAME_SEPARATOR)
-        if len(_sectors) < 2:
+        sectors = s3_uri.split(cls.FILE_USERNAME_SEPARATOR)
+        if len(sectors) < 2:
             return None
 
-        _username_or_uuid = _sectors[0].split('/')[-1]
+        _username_or_uuid = sectors[0].split('/')[-1]
         if _username_or_uuid:
             try:
                 uuid.UUID(_username_or_uuid)
@@ -127,34 +127,34 @@ class S3LearnerCertPNGCleaner(_CleanerInterface):
             batch_count += 1
             # List all files with the specified prefix
             results = self.bucket.list(prefix=self.CERT_FILE_PREFIX, marker=marker)
-            _last_key_name = None       # Track the last key name in the current batch
+            last_key_name = None       # Track the last key name in the current batch
 
             for key in results:
-                _png_resource_uri = key.name
-                _last_key_name = key.name
+                png_resource_uri = key.name
+                last_key_name = key.name
 
-                if _png_resource_uri.endswith(self.CERT_FILE_SUFFIX):                           # Only take .PNG files
-                    _is_leaner_certificate = self.is_leaner_certificate(_png_resource_uri)      # Learner Certificate Only
+                if png_resource_uri.endswith(self.CERT_FILE_SUFFIX):                           # Only take .PNG files
+                    is_leaner_certificate = self.is_leaner_certificate(png_resource_uri)       # Learner Certificate Only
 
-                    if _is_leaner_certificate == None:
+                    if is_leaner_certificate == None:
                         unrecognized_number += 1
                         is_printed = True
-                        print('[ERROR] Got an Unrecognized URI : {}'.format(_png_resource_uri.encode('utf-8')))
+                        print('[ERROR] Got an Unrecognized URI : {}'.format(png_resource_uri.encode('utf-8')))
 
-                    elif _is_leaner_certificate:
+                    elif is_leaner_certificate:
                         is_printed = True
-                        print('[INFO] DELETING Learner Certificate PNG: {} '.format(_png_resource_uri.encode('utf-8')))
+                        print('[INFO] DELETING Learner Certificate PNG: {} '.format(png_resource_uri.encode('utf-8')))
                         if self.dryrun == False:
-                            self.bucket.delete_key(_png_resource_uri)                          # Delete .PNG files of Learner Certificate
+                            self.bucket.delete_key(png_resource_uri)                            # Delete .PNG files of Learner Certificate
                             removed_learner_png_number += 1
                     else:
                         example_cert_number += 1                                                # Count Example Certificates Number
 
             # If no keys were processed, we're done
-            if not _last_key_name:
+            if not last_key_name:
                 break
             # Update the marker to the last key name
-            marker = _last_key_name
+            marker = last_key_name
 
             if not is_printed:
                 print('[INFO] Batch No. ---> {}, marker flag ---> {}'.format(batch_count, marker.encode('utf-8')))
