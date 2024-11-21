@@ -56,6 +56,8 @@ class DFSCleaner(_CleanerInterface):
         self.PERIOD_END_DATE = datetime.now() - relativedelta(
             months=int(input('Please enter Month number of files which you wanna to remain: '))
         )
+        print('Please enter start date : ')
+        self.PERIOD_START_DATE = datetime(int(input('Year:')), int(input('Month:')), int(input('Day:')))
         self.dryrun = dryrun
         print(
             '[INFO] Dryrun Mode={} | cleaning "DFS" files from {} to {} in folders : {}'.format(
