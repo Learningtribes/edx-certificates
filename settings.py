@@ -64,7 +64,7 @@ CERT_WEB_ROOT = '/var/tmp'
 # to the CERT_WEB_ROOT. This is not something you want to do
 # unless you are running your certificate service on a single
 # server
-COPY_TO_WEB_ROOT = False                    # We loaded this from env.json before
+COPY_TO_WEB_ROOT = False
 S3_UPLOAD = True
 S3_VERIFY_PATH = 'cert'
 
@@ -100,6 +100,7 @@ if os.path.isfile(ENV_ROOT / "env.json"):
     CERT_DOWNLOAD_URL = ENV_TOKENS.get('CERT_DOWNLOAD_URL', "")
     CERT_VERIFY_URL = ENV_TOKENS.get('CERT_VERIFY_URL', "")
     CERT_WEB_ROOT = ENV_TOKENS.get('CERT_WEB_ROOT', CERT_WEB_ROOT)
+    COPY_TO_WEB_ROOT = ENV_TOKENS.get('COPY_TO_WEB_ROOT', COPY_TO_WEB_ROOT)
     S3_UPLOAD = ENV_TOKENS.get('S3_UPLOAD', S3_UPLOAD)
     S3_VERIFY_PATH = ENV_TOKENS.get('S3_VERIFY_PATH', S3_VERIFY_PATH)
     CERTS_ARE_CALLED = ENV_TOKENS.get('CERTS_ARE_CALLED', CERTS_ARE_CALLED)
