@@ -2260,15 +2260,15 @@ class CertificateExport(object):
                 s3_cert_path = os.path.join(S3_CERT_PATH, cert_path)
 
                 key = self.s3_bucket.get_key(s3_cert_path)
-                _local_file_path = os.path.join(self.zip_file_folder, os.path.basename(s3_cert_path))
+                local_file_path = os.path.join(self.zip_file_folder, os.path.basename(s3_cert_path))
 
                 if key is None:
                     log.error('File not found in S3 Bucket: {}'.format(s3_cert_path))
                     continue
 
-                log.info('[INFO] Downloading {} to {}...'.format(s3_cert_path, _local_file_path))
-                key.get_contents_to_filename(_local_file_path)
-                downloaded_files.append(_local_file_path)
+                log.info('[INFO] Downloading {} to {}...'.format(s3_cert_path, local_file_path))
+                key.get_contents_to_filename(local_file_path)
+                downloaded_files.append(local_file_path)
 
             with zipfile.ZipFile(self.zip_file_name, 'w') as zip_handle:
                 for _s3_file in downloaded_files:
