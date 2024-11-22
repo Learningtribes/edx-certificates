@@ -35,20 +35,10 @@ class DFSCleaner(object):
         '/edx/var/certs/www-data/downloads',
         '/edx/var/certs/www-data/cert'
     ]
-    PERIOD_START_DATE = None
 
-    def __init__(self):
-        self.PERIOD_START_DATE = datetime.strptime(
-            raw_input('Please enter Start date [Format: 2019-12-06]: '),
-            '%Y-%m-%d'
-        )
-        print(
-            '[INFO] cleaning "DFS" files since {} in folders : {}'.format(
-                self.PERIOD_START_DATE, ' + '.join(self.TARGET_ROOT_FOLDERS)
-            )
-        )
+    def run(self, dryrun, start_date):
+        print('[INFO] cleaning "DFS" files since {} in folders : {}'.format(start_date, ' + '.join(self.TARGET_ROOT_FOLDERS)))
 
-    def run(self, dryrun=True):
         for root_folder in self.TARGET_ROOT_FOLDERS:
             print('[INFO] ################# Root folder {} #################'.format(root_folder))
 
@@ -56,8 +46,8 @@ class DFSCleaner(object):
                 resource_folder = os.path.join(root_folder, folder_name)
                 if os.path.isdir(resource_folder):
                     mod_time = datetime.fromtimestamp(os.path.getmtime(resource_folder))
-                    if self.PERIOD_START_DATE <= mod_time:
-                        print('[INFO] DELETING {} (Modified: {})'.format(resource_folder, mod_time))
+                    if mod_time >= start_date:
+                        print("[INFO] DELETING {} (Modified: {})".format(resource_folder, mod_time))
                         if dryrun == False:
                             shutil.rmtree(resource_folder)  # Delete folder and its contents
 
@@ -71,7 +61,7 @@ class S3LearnerCertPNGCleaner(object):
     FILE_USERNAME_SEPARATOR = '_course-v1'
 
     def __init__(self):
-        print('[INFO] cleaning "AWS/S3" learner certificates ".PNG" files in Bucket[{}]'.format(self.BUCKET))
+        print("[INFO] cleaning 'AWS/S3' learner certificates '.PNG' files in Bucket[{}]".format(self.BUCKET))
         self.s3_conn = boto.connect_s3(settings.CERT_AWS_ID, settings.CERT_AWS_KEY)
         self.bucket = self.s3_conn.get_bucket(self.BUCKET)
 
@@ -83,8 +73,7 @@ class S3LearnerCertPNGCleaner(object):
         """
         sectors = s3_uri.split(cls.FILE_USERNAME_SEPARATOR)
         if len(sectors) < 2:
-            print('[ERROR] Invalid URI format: {}'.format(s3_uri.encode('utf-8')))
-            return None
+            raise ValueError
 
         _username_or_uuid = sectors[0].split('/')[-1]
         if _username_or_uuid:
@@ -94,10 +83,9 @@ class S3LearnerCertPNGCleaner(object):
             except ValueError:
                 return True         # (Username): It's a Learner Certificate if ValueError raised here.
 
-        print('[ERROR] Got an Unrecognized URI : {}'.format(s3_uri.encode('utf-8')))
-        return None
+        raise ValueError
 
-    def run(self, dryrun=True):
+    def run(self, dryrun):
         example_cert_number = 0
         unrecognized_number = 0
         removed_learner_png_number = 0
@@ -115,18 +103,20 @@ class S3LearnerCertPNGCleaner(object):
                 last_key_name = key.name
 
                 if png_resource_uri.endswith(self.CERT_FILE_SUFFIX):                           # Only take .PNG files
-                    is_leaner_certificate = self.is_leaner_certificate(png_resource_uri)       # Learner Certificate Only
+                    try:
+                        is_leaner_certificate = self.is_leaner_certificate(png_resource_uri)       # Learner Certificate Only
 
-                    if is_leaner_certificate == None:
+                        if is_leaner_certificate:
+                            print("[INFO] DELETING Learner Certificate PNG: {} ".format(png_resource_uri.encode("utf-8")))
+                            if dryrun == False:
+                                self.bucket.delete_key(png_resource_uri)                            # Delete .PNG files of Learner Certificate
+                                removed_learner_png_number += 1
+                        else:
+                            example_cert_number += 1                                                # Count Example Certificates Number
+
+                    except ValueError:
+                        print("[ERROR] Got an Unrecognized URI : {}".format(s3_uri.encode("utf-8")))
                         unrecognized_number += 1
-
-                    elif is_leaner_certificate:
-                        print('[INFO] DELETING Learner Certificate PNG: {} '.format(png_resource_uri.encode('utf-8')))
-                        if dryrun == False:
-                            self.bucket.delete_key(png_resource_uri)                            # Delete .PNG files of Learner Certificate
-                            removed_learner_png_number += 1
-                    else:
-                        example_cert_number += 1                                                # Count Example Certificates Number
 
             # If no keys were processed, we're done
             if not last_key_name:
@@ -135,7 +125,7 @@ class S3LearnerCertPNGCleaner(object):
             marker = last_key_name
 
         print(
-            '[INFO] Example Certificate Number = {}, Unrecognized URI Number = {}, Removed Learner Certificate PNG Number = {}'.format(
+            "[INFO] Example Certificate Number = {}, Unrecognized URI Number = {}, Removed Learner Certificate PNG Number = {}".format(
                 example_cert_number, unrecognized_number, removed_learner_png_number
             )
         )
@@ -143,25 +133,33 @@ class S3LearnerCertPNGCleaner(object):
 
 if __name__ == '__main__':
     try:
-        def argsStr2Bool(arg_str):
-            return True if arg_str.lower() in ('yes', 'true', 't', '1') else False
+        def argStr2Bool(arg_str):
+            return True if arg_str.lower() in ("yes", "true", "t", "1") else False
 
-        parser = ArgumentParser(description=r'A resource ( DFS / S3 ) cleaner.')
-        parser.add_argument('--target_type', default='EmptyType', help='Options => dfs / s3')
-        parser.add_argument('--dryrun', type=argsStr2Bool, default=True, help='Options => dfs / s3')
+        def argStr2Date(arg_str):
+            try:
+                return datetime.strptime(arg_str, "%Y-%m-%d")
+            except ValueError as e:
+                raise argparse.ArgumentTypeError("Invalid datetime format: '{}'. Expected Format: 2019-12-06".format(arg_str))
+
+        parser = ArgumentParser(description="A resource ( DFS / S3 ) cleaner.")
+        parser.add_argument("--target_type", default="EmptyType", help="Options => dfs / s3")
+        parser.add_argument("--dryrun", type=argStr2Bool, default=True, help="Options => dfs / s3")
+        parser.add_argument("--start_date", type=argStr2Date, help="Start time in format: '2019-12-06'")
+
         args = parser.parse_args()
-        print('[INFO] Dryrun mode : {}'.format('ON' if args.dryrun else 'OFF'))
+        print("[INFO] Dryrun mode : {}".format("ON" if args.dryrun else "OFF"))
 
         ########### Start to run cleaning task ###########
-        if args.target_type == 'dfs':
-            DFSCleaner().run(args.dryrun)
-        elif args.target_type == 's3':
+        if args.target_type == "dfs":
+            DFSCleaner().run(args.dryrun, parser.start_date)
+        elif args.target_type == "s3":
             S3LearnerCertPNGCleaner().run(args.dryrun)
         else:
-            raise Exception('[Error] Invalid target type: {}'.format(args.target_type))
+            raise Exception("[Error] Invalid target type: {}".format(args.target_type))
 
-        print(r'Done !')
+        print("Done !")
 
     except Exception:
-        print(r'[Exception]: {err_msg}'.format(err_msg=format_exc()))
+        print("[Exception]: {err_msg}".format(err_msg=format_exc()))
         process_terminate(10)
