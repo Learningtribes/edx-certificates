@@ -190,8 +190,10 @@ def autoscale_text(page, string, max_fontsize, max_leading, max_height, max_widt
 class CertificateGen(object):
     """Manages the pdf, signatures, and S3 bucket for course certificates."""
 
-    def __init__(self, course_id, template_pdf=None, aws_id=None, aws_key=None, dir_prefix=None,
-                 long_org=None, long_course=None, pdf_info=None):
+    def __init__(
+            self, course_id, template_pdf=None, aws_id=None, aws_key=None, dir_prefix=None,
+            long_org=None, long_course=None, pdf_info=None, is_example_certificate=False
+    ):
         """Load a pdf template and initialize
 
         Multiple certificates can be generated and uploaded for a single course.
@@ -230,6 +232,7 @@ class CertificateGen(object):
         self.score = 0
         self.duration = None
         self.completion = None
+        self.is_example_certificate = is_example_certificate
 
         def interstitial_factory():
             """ Generate default values for interstitial_texts defaultdict """
@@ -812,8 +815,8 @@ class CertificateGen(object):
             download_url
         )
 
-        # Convert PDF into PNG
-        if self._render_pdf_to_image_fitz(filename) and download_url and download_url.strip():
+        # Convert PDF into PNG for Example Certificates Only ! ( `is_example_certificate` = True )
+        if self.is_example_certificate == True and self._render_pdf_to_image_fitz(filename) and download_url and download_url.strip():
             png_url = download_url.replace('.pdf', '.png')
         else:
             png_url = None
@@ -2181,69 +2184,118 @@ class CertificateGen(object):
         return (download_uuid, verify_uuid, download_url)
 
 
+def retry(times):
+    def decorator(func):
+        def newfn(*args, **kwargs):
+            for attempt in range(0, times):
+                try:
+                    return func(*args, **kwargs)
+                except Exception as e:
+                    log.error('Exception thrown when attempting to run {}, ({} / {}). Error => {}'.format(func, attempt, times, e))
+                    if attempt + 1 >= times:
+                        raise
+            return func(*args, **kwargs)
+        return newfn
+    return decorator
+
+
 class CertificateExport(object):
-
-    def __init__(self, course_id):
+    """ 1) Download PDFs to `/tmp/...` folder from S3.
+        2) Zip PDFs to `/tmp/...`.
+        3) Upload new created zip file to S3.
+        4) Clean local tmp files.
+    """
+    def __init__(self, course_id, s3_certs_files, cleanup=True):
+        self.ensure_dir(TMP_GEN_DIR)
+        self.dir_prefix = tempfile.mkdtemp(prefix=TMP_GEN_DIR)
+        self.ensure_dir(self.dir_prefix)
         self.course_id = course_id
-        self._ensure_dir(TMP_GEN_DIR)
-        dir_prefix = tempfile.mkdtemp(prefix=TMP_GEN_DIR)
-        self._ensure_dir(dir_prefix)
-        self.dir_prefix = dir_prefix
-
-    def create_and_upload(
-            self,
-            certs_path,
-            upload=settings.S3_UPLOAD,
-            cleanup=True,
-            copy_to_webroot=settings.COPY_TO_WEB_ROOT,
-            cert_web_root=settings.CERT_WEB_ROOT,
-    ):
-        time_now = datetime.datetime.now()
-        file_name = '{course}_{date}.zip'.format(course=self.course_id, date=time_now)
-        file_name = file_name.replace(":", "-")
-        file_path = os.path.join(self.dir_prefix, S3_CERT_PATH, 'certs-zip')
-        file_name = os.path.join(file_path, file_name)
-        self._ensure_dir(file_name)
-        certs_base_dir = '/edx/var/certs/www-data/downloads'
-        zip_handler = zipfile.ZipFile(file_name, 'w', zipfile.ZIP_DEFLATED)
-        for f in certs_path:
-            zip_handler.write(os.path.join(certs_base_dir, f), f.rsplit('/')[-1])
-        zip_handler.close()
-
-        dest_path = os.path.relpath(file_name, start=self.dir_prefix)
-        download_url = "{base_url}/{file}".format(
-            base_url=settings.CERT_DOWNLOAD_URL,
-            file=urllib.quote(dest_path)
+        self.cleanup = cleanup
+        self.s3_certs_files = s3_certs_files
+        self.zip_file_folder = os.path.join(   # Contain tmp `pdfs` + `zip`
+            self.dir_prefix, S3_CERT_PATH, 'certs-zip'
         )
-        if upload:
-            s3_conn = boto.connect_s3(settings.CERT_AWS_ID, settings.CERT_AWS_KEY)
-            bucket = s3_conn.get_bucket(BUCKET)
-            try:
-                key = Key(bucket, name=dest_path)
-                key.set_contents_from_filename(file_name, policy='public-read')
-            except:
-                raise
-            else:
-                log.info("uploaded {local} to {s3path}".format(local=file_name, s3path=dest_path))
-        elif copy_to_webroot:
-            publish_dest = os.path.join(cert_web_root, dest_path)
-            try:
-                dirname = os.path.dirname(publish_dest)
-                if not os.path.exists(dirname):
-                    os.makedirs(dirname)
-                shutil.copy(file_name, publish_dest)
-            except:
-                raise
-            else:
-                log.info("published {local} to {web}".format(local=file_name, web=publish_dest))
+        self.zip_file_name = None
+        self.s3_conn = None
+        self.s3_bucket = None
 
-        if cleanup:
-            if os.path.exists(file_path):
-                shutil.rmtree(file_path)
+    def __enter__(self):
+        return self
 
-        return download_url
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        try:
+            if self.cleanup:
+                log.info('[INFO] Removing tmp zip files folder: {}'.format(self.zip_file_folder))
+                if os.path.exists(self.zip_file_folder):
+                    shutil.rmtree(self.zip_file_folder)
 
-    def _ensure_dir(self, f):
+            if self.s3_conn:
+                log.info('[INFO] Closing AWS/S3 handle...')
+                self.s3_conn.close()       # Close S3 connection handle
+
+        except Exception as e:
+            log.error('[ERROR] Got exception while releasing resources: {}'.format(e))
+
+    @classmethod
+    def ensure_dir(cls, f):
         d = os.path.dirname(f)
         if not os.path.exists(d):
             os.makedirs(d)
+
+    def initialize_s3_handles(self):
+        self.zip_file_name = os.path.join(
+            self.zip_file_folder, '{course}_{date}.zip'.format(
+                course=self.course_id, date=datetime.datetime.now()
+            ).replace(':', '-')
+        )
+        self.ensure_dir(self.zip_file_name)
+        self.s3_conn = boto.connect_s3(settings.CERT_AWS_ID, settings.CERT_AWS_KEY)
+        self.s3_bucket = self.s3_conn.get_bucket(BUCKET)
+
+    def compress_s3_PDFs(self):
+        try:
+            downloaded_files = []
+
+            for cert_path in self.s3_certs_files:
+                s3_cert_path = os.path.join(S3_CERT_PATH, cert_path)
+
+                key = self.s3_bucket.get_key(s3_cert_path)
+                local_file_path = os.path.join(self.zip_file_folder, os.path.basename(s3_cert_path))
+
+                if key is None:
+                    log.error('File not found in S3 Bucket: {}'.format(s3_cert_path))
+                    continue
+
+                log.info('[INFO] Downloading {} to {}...'.format(s3_cert_path, local_file_path))
+                key.get_contents_to_filename(local_file_path)
+                downloaded_files.append(local_file_path)
+
+            with zipfile.ZipFile(self.zip_file_name, 'w') as zip_handle:
+                for _s3_file in downloaded_files:
+                    zip_handle.write(_s3_file, arcname=os.path.basename(_s3_file))
+
+        except:
+            raise
+        else:
+            log.info("compressed {} to {}".format(', '.join(self.s3_certs_files), self.zip_file_name))
+
+    @retry(times=2)
+    def upload_zip_file_to_s3(self):
+        try:
+            dest_path = os.path.relpath(self.zip_file_name, start=self.dir_prefix)
+
+            key = Key(self.s3_bucket, name=dest_path)
+            key.set_contents_from_filename(self.zip_file_name, policy='public-read')
+
+        except:
+            raise
+        else:
+            log.info('uploaded {} to {}'.format(self.zip_file_name, dest_path))
+
+        return '{base_url}/{file}'.format(base_url=settings.CERT_DOWNLOAD_URL, file=urllib.quote(dest_path))
+
+    def create_and_upload(self):
+        self.initialize_s3_handles()
+        self.compress_s3_PDFs()
+
+        return self.upload_zip_file_to_s3()
