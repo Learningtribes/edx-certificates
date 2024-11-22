@@ -89,11 +89,9 @@ class S3LearnerCertPNGCleaner(object):
         example_cert_number = 0
         unrecognized_number = 0
         removed_learner_png_number = 0
-        batch_count = 0
         marker = None       # Used for pagination
 
         while True:
-            batch_count += 1
             # List all files with the specified prefix
             results = self.bucket.list(prefix=self.CERT_FILE_PREFIX, marker=marker)
             last_key_name = None       # Track the last key name in the current batch
