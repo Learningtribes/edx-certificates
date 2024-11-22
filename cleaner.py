@@ -145,16 +145,21 @@ if __name__ == '__main__':
         parser = ArgumentParser(description="A resource ( DFS / S3 ) cleaner.")
         parser.add_argument("--target_type", default="EmptyType", help="Options => dfs / s3")
         parser.add_argument("--dryrun", type=argStr2Bool, default=True, help="Options => dfs / s3")
-        parser.add_argument("--start_date", type=argStr2Date, help="Start time in format: '2019-12-06'")
+        parser.add_argument("--start_date", type=argStr2Date, default=None, help="Start time in format: '2019-12-06'")
 
         args = parser.parse_args()
         print("[INFO] Dryrun mode : {}".format("ON" if args.dryrun else "OFF"))
 
         ########### Start to run cleaning task ###########
         if args.target_type == "dfs":
-            DFSCleaner().run(args.dryrun, parser.start_date)
+            if not args.start_date:
+                raise Exception("Invalid start date input")
+
+            DFSCleaner().run(args.dryrun, args.start_date)
+
         elif args.target_type == "s3":
             S3LearnerCertPNGCleaner().run(args.dryrun)
+
         else:
             raise Exception("[Error] Invalid target type: {}".format(args.target_type))
 
