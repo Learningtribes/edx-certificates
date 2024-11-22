@@ -151,7 +151,7 @@ if __name__ == '__main__':
         ########### Start to run cleaning task ###########
         if args.target_type == "dfs":
             if not args.start_date:
-                raise Exception("Invalid start date input")
+                raise Exception("Invalid start date input. [Option] --start_date")
 
             DFSCleaner().run(args.dryrun, args.start_date)
 
