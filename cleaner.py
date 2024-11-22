@@ -13,7 +13,7 @@
         Done !
 
 """
-from argparse import ArgumentParser
+from argparse import ArgumentParser, ArgumentTypeError
 from datetime import datetime
 import os
 import shutil
@@ -137,7 +137,7 @@ if __name__ == "__main__":
             try:
                 return datetime.strptime(arg_str, "%Y-%m-%d")
             except ValueError as e:
-                raise argparse.ArgumentTypeError("Invalid datetime format: '{}'. Expected Format: 2019-12-06".format(arg_str))
+                raise ArgumentTypeError("Invalid datetime format: '{}'. Expected Format: 2019-12-06".format(arg_str))
 
         parser = ArgumentParser(description="A resource ( DFS / S3 ) cleaner.")
         parser.add_argument("--target_type", default="EmptyType", help="Options => dfs / s3")
