@@ -40,17 +40,18 @@ class DFSCleaner(object):
         print('[INFO] cleaning "DFS" files since {} in folders : {}'.format(start_date, ' + '.join(self.TARGET_ROOT_FOLDERS)))
 
         for root_folder in self.TARGET_ROOT_FOLDERS:
-            print('[INFO] ################# Root folder {} #################'.format(root_folder))
+            if dryrun:
+                print('[INFO] ################# Root folder {} #################'.format(root_folder))
 
             for folder_name in os.listdir(root_folder):
                 resource_folder = os.path.join(root_folder, folder_name)
                 if os.path.isdir(resource_folder):
                     mod_time = datetime.fromtimestamp(os.path.getmtime(resource_folder))
                     if mod_time >= start_date:
-                        print("[INFO] DELETING {} (Modified: {})".format(resource_folder, mod_time))
-                        if dryrun == False:
+                        if dryrun:
+                            print("[INFO] DELETING {} (Modified: {})".format(resource_folder, mod_time))
+                        else:
                             shutil.rmtree(resource_folder)  # Delete folder and its contents
-
 
 class S3LearnerCertPNGCleaner(object):
     """Delete PNG files associated with `Learner certificates` on S3
@@ -105,8 +106,9 @@ class S3LearnerCertPNGCleaner(object):
                         is_leaner_certificate = self.is_leaner_certificate(png_resource_uri)       # Learner Certificate Only
 
                         if is_leaner_certificate:
-                            print("[INFO] DELETING Learner Certificate PNG: {} ".format(png_resource_uri.encode("utf-8")))
-                            if dryrun == False:
+                            if dryrun:
+                                print("[INFO] DELETING Learner Certificate PNG: {} ".format(png_resource_uri.encode("utf-8")))
+                            else:
                                 self.bucket.delete_key(png_resource_uri)                            # Delete .PNG files of Learner Certificate
                                 removed_learner_png_number += 1
                         else:
@@ -129,11 +131,8 @@ class S3LearnerCertPNGCleaner(object):
         )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:
-        def argStr2Bool(arg_str):
-            return True if arg_str.lower() in ("yes", "true", "t", "1") else False
-
         def argStr2Date(arg_str):
             try:
                 return datetime.strptime(arg_str, "%Y-%m-%d")
@@ -142,7 +141,7 @@ if __name__ == '__main__':
 
         parser = ArgumentParser(description="A resource ( DFS / S3 ) cleaner.")
         parser.add_argument("--target_type", default="EmptyType", help="Options => dfs / s3")
-        parser.add_argument("--dryrun", type=argStr2Bool, default=True, help="dryrun cleaning tool if true")
+        parser.add_argument("--dryrun", action="store_true", help="to log file names instead of deleting files")
         parser.add_argument("--start_date", type=argStr2Date, default=None, help="Start time in format: '2019-12-06'")
 
         args = parser.parse_args()
