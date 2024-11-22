@@ -142,7 +142,7 @@ if __name__ == '__main__':
 
         parser = ArgumentParser(description="A resource ( DFS / S3 ) cleaner.")
         parser.add_argument("--target_type", default="EmptyType", help="Options => dfs / s3")
-        parser.add_argument("--dryrun", type=argStr2Bool, default=True, help="Options => dfs / s3")
+        parser.add_argument("--dryrun", type=argStr2Bool, default=True, help="dryrun cleaning tool if true")
         parser.add_argument("--start_date", type=argStr2Date, default=None, help="Start time in format: '2019-12-06'")
 
         args = parser.parse_args()
